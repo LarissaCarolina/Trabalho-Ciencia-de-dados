@@ -1,0 +1,34 @@
+
+#-------------------------------------------------------------------------------
+# Se identificando para o para o github (via terminal):
+# git config --global user.email "fndemarqui@gmail.com"
+# git config --global user.name "fndemarqui"
+
+# alternativamente, via R:
+usethis::use_git_config(user.name = "fndemarqui", # Seu nome
+                        user.email = "fndemarqui@gmail.com") # Seu email
+
+# obs: necessário instalar primeiro o pacote usethis!!!
+
+#-------------------------------------------------------------------------------
+# No terminal entrar com a linha de comando para lincar o projeto com o github:
+
+# git remote add origin https://github.com/fndemarqui/meuprojeto.git
+# git add .
+# git status
+# git commit -m "meu primeiro comentario"
+# git push -u origin master
+
+
+
+# # para adicionar tudo
+# git add .
+#
+# # para comitar
+# git commit -m "adicao do banco capacidade"
+#
+# # para subir conteúdo:
+# git push
+
+# # para baixar conteúdo:
+# git push

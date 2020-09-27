@@ -1,0 +1,25 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1601234198257.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "65BDC92F",
+    "lastKnownWriteTime" : 1600692838,
+    "last_content_update" : 1600692838,
+    "path" : "C:/Users/Fabio/Downloads/script_github.R",
+    "project_path" : null,
+    "properties" : {
+        "cursorPosition" : "16,2",
+        "scrollLine" : "7"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
