@@ -258,4 +258,12 @@ conf2<-ggplot()+
 
 plotly::ggplotly(conf2)
 
+# Construindo o mapa para ilustrar o número de recuperados:
+conf3<-ggplot()+
+  geom_sf(data=world,fill='white')+
+  geom_sf(data=mapa,aes(geometry=geometry,fill=Recuperados))+
+  theme_classic()
+
+plotly::ggplotly(conf3)
+
 
