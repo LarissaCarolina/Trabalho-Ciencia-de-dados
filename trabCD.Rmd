@@ -1,0 +1,102 @@
+---
+lang: "pt-BR"
+output: 
+  pdf_document
+---
+
+\begin{titlepage}
+	\begin{center}
+		\textbf{\LARGE{Universidade Federal de Minas Gerais}}\\
+		\LARGE{Departamento de Estatística}\\ 
+		\vspace{4cm}
+        \vspace{100pt}
+        \textbf{\LARGE{Relatório Final - Ciência de dados}}\\
+		\vspace{3,5cm}
+	\end{center}
+	
+	\begin{center}
+			\textbf{Alunas:}\\ Amanda Xavier,\\ Ana Clara Orzil,\\ Larissa Carolina,\\ Letícia Canhestro e\\Natália Carolina \\
+			\textbf{Professor:} Fábio Demarqui \\
+ \end{center}
+	\vspace{1cm}
+	
+	\begin{center}
+		\vspace{\fill}
+			 Agosto\\
+		 2020
+			\end{center}
+\end{titlepage}
+
+
+\newpage
+\tableofcontents
+\newpage
+
+
+# Reuniões 
+
+(Tirar para versão final)
+
+## Reunião 22/08
+
+Nosso produto final será um painel usando shiny.
+
+Faremos mapas, cartões com os números de mortos, novos casos, etc...
+
+Para próxima reunião: 
+
+- Estudar o shiny.
+
+
+## Reunião 12/09
+
+Encontramos o flexdashboard. É um pacote onde utilizamos o Rmarkdown para criar paineis. É possível integrar com o shiny.  
+
+
+A ideia inicial é ter 3 abas no painel:
+
+1. Visão do mundo
+
+2. Visão do Brasil
+
+3. Visão de Minas
+
+4. Se der tempo uma aba com o detalhamento de BH
+
+### Ideias para tentativas
+
+- Nuvem de palavras (pacote wordcloud2) com tweets sobre a covid (Pacote que Ana e Natalia usaram na disciplina de Pacotes Estatísticos : twitteR)
+
+- Gráfico de corrida de barras 
+
+### Tarefa:
+
+Tentar automatizar a extração dos dados do portal do ministério da saúde.
+
+## Reunião 26/09
+
+- Não será mais necessário extrair os dados diretamente do portal do ministério da saúde. Podemos pegar do Rafael.
+
+- 
+
+### Tarefa:
+
+- Ver se é possível automatizar a atualização do painel. 
+
+- Organizar os nossos scripts para subir para o github
+
+\newpage
+
+# Introdução
+Falar brevemente sobre a pandemia e objetivo do trabalho
+
+# Manipulação dos dados
+ Descrever como fizemos a manipulação dos dados
+ 
+## Dados do Mundo
+
+## Dados do Brasil
+
+# Criação das visualizações
+
+# Criação do painel
