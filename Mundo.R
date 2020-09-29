@@ -27,7 +27,7 @@ deaths <- read_csv(url(url_deaths))
 recovered <- read_csv(url(url_recovered))
 #View(recovered)
 
-#----------------------------- Processo de manipulação dos dados -----------------------#
+#----------------------------- Processo de manipulação dos dados -----------------------
 
 # Alterando o formato dos dados (queremos que os dados estejam em um formato "tidy"):
 confirmados<- confirmed %>% pivot_longer( cols=-c("Province/State" ,"Country/Region" ,"Lat", "Long") , 
@@ -139,8 +139,7 @@ mundo_pais$NovosMortos<-dados3$X..i..
 View(mundo_pais)
 
 
-# ------------------ A partir daqui iremos criar algumas vizualizações: ----------------#
-
+# ------------------ A partir daqui iremos criar algumas visualizações: ----------------
 ## Tentaremos produzir algumas animações:
 require(gganimate)
 
