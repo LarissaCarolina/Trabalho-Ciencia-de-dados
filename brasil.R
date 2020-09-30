@@ -3,7 +3,7 @@
 #     Ana Clara, Amanda, Larisa, Leticia, Natalia     #
 #######################################################
 
-#setwd("~/Natália/Ciencia de dados/Brasil")
+#setwd("~/Nat?lia/Ciencia de dados/Brasil")
 rm(list=ls(all=TRUE))
 
 #########################
@@ -34,12 +34,12 @@ periodo <- data_inicial_pandemia_br%--%data_atual_pandemia_br
 qnt_dias <- as.numeric(periodo, "days") + 1
 qnt_meses <- as.numeric(str_sub(as.period(periodo, "month"), start = 1, end=1))
 
-# Vemos que as primeiras linhas são referentes a apenas os valores para o Brasil:
-# Depois são os dados de cada estado
+# Vemos que as primeiras linhas s?o referentes a apenas os valores para o Brasil:
+# Depois s?o os dados de cada estado
 # Apos isso, temos os dados de cada municipio
 
 # Iremos utilizar no trabalho os dados do Brasil como um todo, de cada estado e para 
-# fazer uma analise mais detalhada par ao Brasil. Então vamos separar dados em:
+# fazer uma analise mais detalhada par ao Brasil. Ent?o vamos separar dados em:
 
 # - dados_brasil: dados contendos os totais do brasil
 # - dados_estados: dados contendo detalhes dos estados
@@ -48,7 +48,7 @@ qnt_meses <- as.numeric(str_sub(as.period(periodo, "month"), start = 1, end=1))
 
 #### Dados Brasil: ####
 
-#E possivel perceber que os dados para o Brasil são todos com coduf = 76
+#E possivel perceber que os dados para o Brasil s?o todos com coduf = 76
 dados_brasil <- filter(dados, coduf==76)
 
 #### Dados Estados ###
@@ -57,8 +57,8 @@ dados_brasil <- filter(dados, coduf==76)
 inicio_est <- qnt_dias + 1
 final_est <- (inicio_est + (qnt_dias*27))-1 #sao 27 estados
 
-#Tem um problema que RO repete após a linha 6021 a parit da linha 6021 na data atual.
-# Então, dados do estado vai até final_est
+#Tem um problema que RO repete ap?s a linha 6021 a parit da linha 6021 na data atual.
+# Ent?o, dados do estado vai at? final_est
 dados_estado <- dados[inicio_est:(final_est-1),]
 #dados_estado[nrow(dados_estado)]
 #View(dados_estado)
@@ -69,7 +69,7 @@ dados_mg_mun <- filter(dados, municipio != "" & estado == "MG")
 #View(dados_mg_mun)
 #dim(dados_mg_mun)
 
-# Em MG, os dados a nivel de municipio começam em 27/03/2020
+# Em MG, os dados a nivel de municipio come?am em 27/03/2020
 # Modificando o periodo do dia:
 data_inicial_pandemia_mg <- as.character(ymd(dados_mg_mun[1,'data']))
 data_atual_pandemia_mg <- ymd(today()-1)
@@ -124,7 +124,7 @@ mean(dados_brasil$obitosNovos[(nrow(dados_brasil)-14):nrow(dados_brasil)], na.rm
 library(rgdal)   # para carregar o shape
 library(leaflet)
 
-## Lembrar de baixar os dados site do ibge, eles estão dentro de uma pasta chamada Mapa
+## Lembrar de baixar os dados site do ibge, eles est?o dentro de uma pasta chamada Mapa
 shp <- readOGR("Mapa\\.", "BR_UF_2019", stringsAsFactors=FALSE, encoding="UTF-8")
 
 Brasillastadate<- dados_estado %>% filter(data == max(data))
@@ -156,3 +156,31 @@ leaflet(data = brasileiropg) %>%
 
 
 ############ Agora um mapinha animado
+
+
+
+###### Twitter #######
+########################  Tentar buscar dados do Twitter
+library(twitteR)
+library(wordcloud2)
+library(stringr)
+
+#https://apps.twitter.com/app/new
+akey<-'SNjqQpunmVROj78bpSrbXaY42'
+asecret<-'JPA5NePjI1wchJ5tTA7S94LEskmuMWb8bCIJBQa4ozECcze8x6'
+atoken<-'588512062-cnhAyXUANA71u9isu5Smr490l4e8ebOb5eePpDBQ'
+atokenSecret<-'HKEsqOh6Kix50iYcunURpdLJBFo8MSRU2QMKmhQDINjJ6'
+setup_twitter_oauth(akey,asecret,atoken,atokenSecret)
+
+#pesquisar assunto ou hashtag
+p<-searchTwitter('covid19',n=10,lang="pt")
+dfp<-twListToDF(p)
+dfp$text<-str_to_lower(dfp$text)
+
+lista_palavras <- strsplit(dfp$text, "\\W+")
+vetor_palavras <- unlist(lista_palavras)
+
+frequencia_palavras <- table(vetor_palavras)
+frequencia_ordenada_palavras <- sort(frequencia_palavras, decreasing=TRUE)
+
+wordcloud2(data = frequencia_ordenada_palavras, figPath = "Brasil.png")
