@@ -173,14 +173,35 @@ atokenSecret<-'HKEsqOh6Kix50iYcunURpdLJBFo8MSRU2QMKmhQDINjJ6'
 setup_twitter_oauth(akey,asecret,atoken,atokenSecret)
 
 #pesquisar assunto ou hashtag
-p<-searchTwitter('covid19',n=10,lang="pt")
+p<-searchTwitter('covid19',n=100,lang="pt")
 dfp<-twListToDF(p)
 dfp$text<-str_to_lower(dfp$text)
 
+
 lista_palavras <- strsplit(dfp$text, "\\W+")
 vetor_palavras <- unlist(lista_palavras)
+library(tm)
+library(SnowballC)
+word.corpus <- Corpus(VectorSource(vetor_palavras)) 
 
-frequencia_palavras <- table(vetor_palavras)
-frequencia_ordenada_palavras <- sort(frequencia_palavras, decreasing=TRUE)
+##
 
-wordcloud2(data = frequencia_ordenada_palavras, figPath = "Brasil.png")
+word.corpus<-word.corpus%>%
+  tm_map(removePunctuation)%>% ##eliminar pontuacao
+  tm_map(removeNumbers)%>% #sem numeros
+  tm_map(stripWhitespace)# sem espacos
+
+word.corpus<-word.corpus%>%
+  tm_map(tolower)%>% ##make all words lowercase
+  tm_map(removeWords, stopwords("por"))
+
+word.corpus <- tm_map(word.corpus, stemDocument)
+word.corpus <- tm_map(word.corpus, removeWords, c("https"))
+word.counts <- as.matrix(TermDocumentMatrix(word.corpus))
+word.freq <- sort(rowSums(word.counts), decreasing = TRUE)
+word.freq<- rownames_to_column(as.data.frame(word.freq))
+head(word.freq)
+#frequencia_palavras <- table(vetor_palavras)
+#frequencia_ordenada_palavras <- sort(frequencia_palavras, decreasing=TRUE)
+
+wordcloud2(word.freq, size=0.8)
