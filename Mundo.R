@@ -27,7 +27,7 @@ deaths <- read_csv(url(url_deaths))
 recovered <- read_csv(url(url_recovered))
 #View(recovered)
 
-#----------------------------- Processo de manipulação dos dados -----------------------
+#----------------------------- Processo de manipulação dos dados -----------------------#
 
 # Alterando o formato dos dados (queremos que os dados estejam em um formato "tidy"):
 confirmados<- confirmed %>% pivot_longer( cols=-c("Province/State" ,"Country/Region" ,"Lat", "Long") , 
@@ -104,7 +104,7 @@ dados3<-cbind(plyr::ldply(novos, data.frame))
 mundo_pais$NovosCasos<-dados3$X..i..
 
 # Verificando o resultado:
-View(mundo_pais) # Funcionou!
+#View(mundo_pais) # Funcionou!
 
 # Iremos repetir o mesmo processo para os novos casos recuperados por dia:
 novos<-tapply(mundo_pais$TotalRecuperados,mundo_pais$Country,diff)
@@ -137,9 +137,10 @@ mundo_pais$NovosMortos<-dados3$X..i..
 
 #Conferindo o resultado:
 View(mundo_pais)
+summary(mundo_pais$NovosCasos)
 
+# ------------------ A partir daqui iremos criar algumas vizualizações: ----------------#
 
-# ------------------ A partir daqui iremos criar algumas visualizações: ----------------
 ## Tentaremos produzir algumas animações:
 require(gganimate)
 
@@ -154,7 +155,7 @@ g_corridas_barras<-ggplot(top,aes(x=TotalCasos,y=Country,fill=Country))+
     transition_time(Data)+
     theme_minimal()+
     labs(title = "Data: {frame_time}", x="País", y="Total de casos")
-animate(g_corridas_barras, renderer = gifski_renderer(loop = FALSE)) #Esse argumento faz a animação pare na última data.
+animate(g_corridas_barras, renderer = gifski_renderer(loop = FALSE), nframes=300) #Esse argumento faz a animação pare na última data.
 
 #Animação: Número de novos casos.
 g_linha_novos_casos<-ggplot(top,aes(y=NovosCasos, col= Country,x=Data))+
@@ -164,7 +165,7 @@ g_linha_novos_casos<-ggplot(top,aes(y=NovosCasos, col= Country,x=Data))+
   theme_minimal()+
   view_follow(fixed_x = T)+
   labs(x="Data",y="Número de novos casos")
-animate(g_linha_novos_casos, renderer = gifski_renderer(loop = FALSE))
+animate(g_linha_novos_casos, renderer = gifski_renderer(loop = FALSE), nframes=300)
 
 #Animação: Número de casos confirmados.
 topPaises<-mundo_atual %>% top_n(6,CasosConfirmados) %>% select(Country)
@@ -176,7 +177,7 @@ g_linha_CasosConf<- ggplot(top,aes(y=TotalCasos,col=Country,x=Data))+
   geom_text(aes(x = today()-1, label = Country), hjust = 0) + 
   transition_reveal(Data)+theme_minimal()+view_follow(fixed_x = T)+
   labs(x="Data",y="Total de casos")
-animate(g_linha_CasosConf, renderer = gifski_renderer(loop = FALSE))
+animate(g_linha_CasosConf, renderer = gifski_renderer(loop = FALSE), nframes=300)
 
 
 
@@ -256,13 +257,5 @@ conf2<-ggplot()+
   theme_classic()
 
 plotly::ggplotly(conf2)
-
-# Construindo o mapa para ilustrar o número de recuperados:
-conf3<-ggplot()+
-  geom_sf(data=world,fill='white')+
-  geom_sf(data=mapa,aes(geometry=geometry,fill=Recuperados))+
-  theme_classic()
-
-plotly::ggplotly(conf3)
 
 
