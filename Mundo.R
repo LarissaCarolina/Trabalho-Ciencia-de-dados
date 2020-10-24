@@ -45,8 +45,8 @@ recuperados <- recovered %>% pivot_longer(cols = -c("Province/State", "Country/R
 
 # Juntando as tabelas (Confirmados, recuperados e mortes) em uma única tabela:
 mundo <- confirmados %>% 
-  inner_join(recuperados, by=c("Country/Region", "Lat", "Long","Data")) %>% 
-  inner_join(mortes, by=c("Country/Region", "Lat", "Long","Data")) %>% 
+  left_join(recuperados, by=c("Country/Region", "Lat", "Long","Data")) %>% 
+  left_join(mortes, by=c("Country/Region", "Lat", "Long","Data")) %>% 
   select("Province/State", "Country/Region", "Lat", "Long", "Data",
                          "CasosConfirmados", "Mortes", "Recuperados")
 #View(mundo)
@@ -115,7 +115,7 @@ for( i in names(novos)){
 }
 
 # Voltando para o formato df:
-dados3<-cbind(plyr::ldply(novos, data.frame))
+dados3<-plyr::ldply(novos, data.frame)
 
 #Acrescentando a nova coluna no banco:
 mundo_pais$NovosRec<-dados3$X..i..
@@ -130,7 +130,7 @@ for(i in names(novos)){
 }
 
 # Voltando para o formato df
-dados3<-cbind(plyr::ldply(novos, data.frame))
+dados3<-plyr::ldply(novos, data.frame)
 
 # Acrescentado a nova coluna no banco:
 mundo_pais$NovosMortos<-dados3$X..i..
@@ -212,7 +212,7 @@ mapa$geom<-str_replace(mapa$geom,'-',' ')
 
 # Substiruir o 'Is.' por Islands e St por Saint:
 mapa$geom<-str_replace(mapa$geom,'Is.','Islands')
-mapa$geom<-str_replace(mapa$geom,'St','Saint')
+mapa$geom<-str_replace(mapa$geom,'St\n','Saint')
 mapa$Province<-str_replace(mapa$Province,'St','Saint')
 summary(mapa$Province==mapa$geom)
 summary(mapa$Country==mapa$geom)
@@ -234,28 +234,32 @@ v %>% filter(str_sub(v$Province,end=2)!=str_sub(v$geom,end=2)) %>% View
 # Talvez faça sentido incorporar Gilbraltar na Espanha já que o território pertence ao Reino Unido mas está dentro da espanha
 
 
-# Agora precisamos criar uma base agrupada pela geometria que usaremos:
-# mapa_g<-
-#   mapa %>% group_by(geom) %>%
-#   summarise(
-#     Casos=sum(CasosConfirmados),
-#     Mortes=sum(Mortes),
-#     )
 
+# Agora precisamos criar uma base agrupada pela geometria que usaremos:
+ mapa_g<-
+   mapa %>% group_by(geom) %>%
+   summarise(
+   Casos=sum(CasosConfirmados),
+     Mortes=sum(Mortes),
+   Recuperados= sum(Recuperados)
+   
+     )
+mapa_g<- rename(mapa_g,Territorio=geom)
 # Construindo o mapa para ilustrar o número de casos confirmados:
 conf1<-ggplot()+
   geom_sf(data=world,fill='white')+
-  geom_sf(data=mapa,aes(geometry=geometry,fill=CasosConfirmados))+
+  geom_sf(data=mapa_g,aes(label=Territorio,geometry=geometry,fill=Casos))+
   theme_classic()
 
-plotly::ggplotly(conf1)
+plotly::ggplotly(conf1, tooltip = c("Casos",'Territorio'))
+
 
 # Construindo o mapa para ilustrar o número de mortes:
 conf2<-ggplot()+
   geom_sf(data=world,fill='white')+
-  geom_sf(data=mapa,aes(geometry=geometry,fill=Mortes))+
+  geom_sf(data=mapa_g,aes(abel=Territorio,geometry=geometry,fill=Mortes))+
   theme_classic()
 
-plotly::ggplotly(conf2)
+plotly::ggplotly(conf2tooltip = c("Casos",'Territorio'))
 
 
