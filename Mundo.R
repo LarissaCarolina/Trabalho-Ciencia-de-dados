@@ -260,6 +260,6 @@ conf2<-ggplot()+
   geom_sf(data=mapa_g,aes(abel=Territorio,geometry=geometry,fill=Mortes))+
   theme_classic()
 
-plotly::ggplotly(conf2tooltip = c("Casos",'Territorio'))
+plotly::ggplotly(conf2,tooltip = c("Casos",'Territorio'))
 
 
