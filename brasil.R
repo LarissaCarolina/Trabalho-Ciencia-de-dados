@@ -2,7 +2,7 @@
 #             Trabalho de Ciencia de Dados            #
 #     Ana Clara, Amanda, Larisa, Leticia, Natalia     #
 #######################################################
-
+#
 #setwd("~/Nat?lia/Ciencia de dados/Brasil")
 rm(list=ls(all=TRUE))
 
@@ -80,8 +80,8 @@ qnt_dias_mg <- as.numeric(periodo_mg, "days") + 1
 
 #checando a quantidade de dados por municipio:
 check_mg <- dados_mg_mun %>%
-              group_by(municipio) %>%
-              summarise(contagem = length(municipio))
+  group_by(municipio) %>%
+  summarise(contagem = length(municipio))
 ifelse(nrow(dados_mg_mun) == 853*qnt_dias_mg, "Dados ok", "Dados Errados")
 ifelse(nrow(filter(check_mg, contagem != 184)) == 0, "Dados ok", "Dados Errados")
 
@@ -205,3 +205,70 @@ head(word.freq)
 #frequencia_ordenada_palavras <- sort(frequencia_palavras, decreasing=TRUE)
 
 wordcloud2(word.freq, size=0.8)
+
+
+#---------------------- Animações---------------------
+
+##Animação: Corrida de barras ordenado S2, tô emocionada!
+
+#Aqui iremos pegar o top 6 de casos atuais.
+brasil_atual <-
+  dados_estado %>% 
+  filter(data==max(data))
+
+top_estados<-brasil_atual %>%
+  top_n(6,casosAcumulado) %>%
+  select(estado)
+
+#Filtrando a base atual pelos países selecionados anteriormente.
+top<-dados_estado %>%
+  filter(estado %in% c(top_estados$estado))
+
+# Para que o gráfico fique ordenado em cada data, precisamos criar do número de casos por data:
+rank<-top %>% 
+  select(regiao, data, estado, casosAcumulado) %>% 
+  group_by(data) %>%
+  arrange(-casosAcumulado) %>%
+  mutate(rank=row_number())
+
+
+g_corrida <- rank %>%
+  ggplot(aes(x = -rank,y = casosAcumulado, group = estado)) +
+  geom_tile(aes(y = casosAcumulado / 2, height = casosAcumulado, fill = estado), width = 0.9) +
+  geom_text(aes(label = estado), hjust = "right", colour = "black", fontface = "bold", nudge_y = -100000) +
+  geom_text(aes(label = casosAcumulado), hjust = "left", nudge_y = 100000, colour = "grey30") +
+  coord_flip(clip="off") +
+  # gganimate
+  transition_time(data) +
+  theme_minimal()+
+  theme(axis.text.y=element_blank(), 
+        axis.ticks.y=element_blank())+
+  ease_aes('cubic-in-out') +
+  labs(title='Estados com os seis maiores números de casos confirmados atualmente',
+       subtitle='Total de casos confirmados em {round(frame_time,0)}', x=" ", y=" ",fill = "Estado (UF)")
+animate(g_corrida, nframes = 100, fps = 25, end_pause = 50)
+
+
+## Animação: Novos Casos
+#Acho que o gráfico com mais de duas localidades fica muito poluído, vou fixar um top 2.
+brasil_atual <-
+  dados_estado %>% 
+  filter(data==max(data))
+
+top_estados<-brasil_atual %>%
+  top_n(2,casosAcumulado) %>%
+  select(estado)
+
+#Filtrando a base atual pelos países selecionados anteriormente.
+top<-dados_estado %>%
+  filter(estado %in% c(top_estados$estado))
+
+g_linha_novos_casos<-ggplot(top,aes(y=casosNovos, col= estado,x=data))+
+  geom_line()+
+  geom_point() +
+  transition_reveal(data)+
+  theme_minimal()+
+  view_follow(fixed_x = T)+
+  labs(title='Número de novos casos',
+        x=" ", y=" ",col = "Estado (UF)")
+animate(g_linha_novos_casos, nframes = 300, fps = 25, end_pause = 50)
