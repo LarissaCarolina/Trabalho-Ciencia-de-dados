@@ -1,8 +1,8 @@
 #----------------------------------------------------------------------------------------------
 #---------------------------------- Dados Covid-19 - Mundo ------------------------------------
 #----------------------------------------------------------------------------------------------
-
-#Carregando os pacotes necessÃ¡rios:
+rm(list=ls(all=TRUE))
+#Carregando os pacotes necessários:
 library(rnaturalearth)
 library(rnaturalearthdata)
 library(rnaturalearthhires)
@@ -27,31 +27,31 @@ deaths <- read_csv(url(url_deaths))
 recovered <- read_csv(url(url_recovered))
 #View(recovered)
 
-#----------------------------- Processo de manipulaÃ§Ã£o dos dados -----------------------#
+#----------------------------- Processo de manipulação dos dados -----------------------#
 
 # Alterando o formato dos dados (queremos que os dados estejam em um formato "tidy"):
 confirmados<- confirmed %>% pivot_longer( cols=-c("Province/State" ,"Country/Region" ,"Lat", "Long") , 
-             names_to = "Data", 
-             values_to =  "CasosConfirmados")
+                                          names_to = "Data", 
+                                          values_to =  "CasosConfirmados")
 mortes <- deaths %>% pivot_longer(cols = -c("Province/State", "Country/Region", "Lat", "Long"),
-                                        names_to="Data", values_to="Mortes")
+                                  names_to="Data", values_to="Mortes")
 recuperados <- recovered %>% pivot_longer(cols = -c("Province/State", "Country/Region", "Lat", "Long"),
-                                     names_to="Data", values_to="Recuperados")
+                                          names_to="Data", values_to="Recuperados")
 
 #View(confirmados)
 #View(mortes)
 #View(recuperados)
 
 
-# Juntando as tabelas (Confirmados, recuperados e mortes) em uma Ãºnica tabela:
+# Juntando as tabelas (Confirmados, recuperados e mortes) em uma única tabela:
 mundo <- confirmados %>% 
   left_join(recuperados, by=c("Country/Region", "Lat", "Long","Data")) %>% 
   left_join(mortes, by=c("Country/Region", "Lat", "Long","Data")) %>% 
   select("Province/State", "Country/Region", "Lat", "Long", "Data",
-                         "CasosConfirmados", "Mortes", "Recuperados")
+         "CasosConfirmados", "Mortes", "Recuperados")
 #View(mundo)
 
-# Problema: Alguns paÃ­ses com informaÃ§Ãµes diferentes nas  3 bases
+# Problema: Alguns países com informações diferentes nas  3 bases
 
 # Ver quais:
 
@@ -60,7 +60,7 @@ teste<-mundo %>%
   select("Province/State","Country/Region",Data,CasosConfirmados) %>%
   inner_join(mortes,by=c("Province/State",'Country/Region','Data')) %>%
   inner_join(recuperados,by=c("Province/State",'Country/Region','Data'))
-View(teste)
+#View(teste)
 
 auxiliar<-mundo %>% 
   filter(!is.na(Recuperados)&!is.na(Mortes))
@@ -78,20 +78,20 @@ names(mundo)
 class(mundo)
 sapply(mundo,class)
 
-# Ã‰ necessÃ¡rio converter a classe da coluna de data para date:
+# É necessário converter a classe da coluna de data para date:
 require(lubridate)
 head(mundo$Data)
 mundo$Data<-mdy(mundo$Data)
 summary(mundo$Data)
 
-# Banco de dados com os totais mais atuais (serÃ¡ utilizado no mapa).
+# Banco de dados com os totais mais atuais (será utilizado no mapa).
 # No aplicativo, pretendemos colocar um filtro de data. De maneira que utilizar o filtro, o mapa seja de acordo a essa data. 
 mundo_atual<-
   mundo %>% 
   filter(Data==max(Data))
 #View(mundo_atual)
 
-# A seguir criaremos uma base agrupada por paÃ­s:
+# A seguir criaremos uma base agrupada por país:
 mundo_pais<-mundo %>%
   group_by(Country,Data) %>%
   summarise(
@@ -102,13 +102,13 @@ mundo_pais<-mundo %>%
 
 
 # A seguir criaremos as colunas novos Casos, novos Recuperados e novos Mortos por dia:
-# Falta estruturar melhor essa parte, mas a ideia Ã© essa. 
-# Ordenar por pais e data, aplicar o diff por paÃ­s.
+# Falta estruturar melhor essa parte, mas a ideia é essa. 
+# Ordenar por pais e data, aplicar o diff por país.
 # a tapply retorna uma lista, temos q voltar pro banco
 mundo_pais<-mundo_pais[order(mundo_pais$Country,mundo_pais$Data),]
 novos<-tapply(mundo_pais$TotalCasos,mundo_pais$Country,diff)
 
-# Ã‰ necessÃ¡rio colocar o nÃºmero de casos no dia 1. Porque a funÃ§Ã£o diff exclui esse valor.
+# É necessário colocar o número de casos no dia 1. Porque a função diff exclui esse valor.
 # Por enquento faremos assim:
 for( i in names(novos)){
   casos_pais<-filter(mundo_pais,Country==i) %>% select(TotalCasos) #Pegando o data frame com o n?mero de casos do pa?s em quest?o.
@@ -154,55 +154,84 @@ dados3<-plyr::ldply(novos, data.frame)
 mundo_pais$NovosMortos<-dados3$X..i..
 
 #Conferindo o resultado:
-View(mundo_pais)
+#View(mundo_pais)
 summary(mundo_pais$NovosCasos)
 
-# ------------------ A partir daqui iremos criar algumas vizualizaÃ§Ãµes: ----------------#
+# ------------------ Animações: ----------------#
 
-## Tentaremos produzir algumas animaÃ§Ãµes:
 require(gganimate)
+##Animação: Corrida de barras ordenado S2, tô emocionada!
 
-#Pegando o top 6 do nÃºmero de casos confirmados atualmente e selecionando o nome dos paÃ­ses.
-topPaises<-mundo_atual %>% top_n(6,CasosConfirmados) %>% select(Country)
-#Filtrando a base atual pelos paÃ­ses selecionados anteriormente.
-top<-mundo_pais %>% filter(Country %in% c(topPaises$Country,'China'))
+#Aqui iremos pegar o top 6 de casos atuais.
+mundo_atual<-
+  mundo %>% 
+  filter(Data==max(Data))
 
-#AnimaÃ§Ã£o: NÃºmero de casos confirmados (Corrida de barras):
-g_corridas_barras<-ggplot(top,aes(x=TotalCasos,y=Country,fill=Country))+
-    geom_col()+
-    transition_time(Data)+
-    theme_minimal()+
-    labs(title = "Data: {frame_time}", x="PaÃ­s", y="Total de casos")
-animate(g_corridas_barras, renderer = gifski_renderer(loop = FALSE), nframes=300) #Esse argumento faz a animaÃ§Ã£o pare na Ãºltima data.
+top_mundo<-mundo_atual %>%
+  top_n(6,CasosConfirmados) %>%
+  select(Country)
 
-#AnimaÃ§Ã£o: NÃºmero de novos casos.
+#Filtrando a base atual pelos países selecionados anteriormente.
+top<-mundo_pais %>%
+  filter(Country %in% c(top_mundo$Country,'China',"Italy"))
+
+# Para que o gráfico fique ordenado em cada data, precisamos criar do número de casos por data:
+rank<-top %>% 
+  select(Country, Data, TotalCasos) %>% 
+  group_by(Data) %>%
+  arrange(-TotalCasos) %>%
+  mutate(rank=row_number())
+
+
+g_corrida <- rank %>%
+  ggplot(aes(x = -rank,y = TotalCasos, group = Country)) +
+  geom_tile(aes(y = TotalCasos / 2, height = TotalCasos, fill = Country), width = 0.9) +
+  geom_text(aes(label = Country), hjust = "right", colour = "black", fontface = "bold", nudge_y = -100000) +
+  geom_text(aes(label = TotalCasos), hjust = "left", nudge_y = 100000, colour = "grey30") +
+  coord_flip(clip="off") +
+  # gganimate
+  transition_time(Data) +
+  theme_minimal()+
+  theme(axis.text.y=element_blank(), 
+        axis.ticks.y=element_blank())+
+  ease_aes('cubic-in-out') +
+  labs(title='Rank dos paises com os seis maiores números de casos confirmados',
+       subtitle='Total de casos confirmados em {round(frame_time,0)}', x=" ", y=" ",fill = "País")
+
+
+animate(g_corrida, nframes = 300, fps = 25, end_pause = 50) 
+
+
+
+## Animação: Novos Casos
+#Acho que o gráfico com mais de duas localidades fica muito poluído, vou fixar um top 2.
+#Aqui iremos pegar o top 2 de casos atuais.
+mundo_atual<-
+  mundo %>% 
+  filter(Data==max(Data))
+
+top_mundo<-mundo_atual %>%
+  top_n(2,CasosConfirmados) %>%
+  select(Country)
+
+#Filtrando a base atual pelos países selecionados anteriormente.
+top<-mundo_pais %>%
+  filter(Country %in% c(top_mundo$Country))
+
 g_linha_novos_casos<-ggplot(top,aes(y=NovosCasos, col= Country,x=Data))+
   geom_line()+
-  geom_text(aes(x = today()-1, label = Country), hjust = 0) +
+  geom_point() +
   transition_reveal(Data)+
   theme_minimal()+
   view_follow(fixed_x = T)+
-  labs(x="Data",y="NÃºmero de novos casos")
-animate(g_linha_novos_casos, renderer = gifski_renderer(loop = FALSE), nframes=300)
-
-#AnimaÃ§Ã£o: NÃºmero de casos confirmados.
-topPaises<-mundo_atual %>% top_n(6,CasosConfirmados) %>% select(Country)
-top<-mundo_pais %>% filter(Country %in% c(topPaises$Country,'China',"Italy"))
-
-g_linha_CasosConf<- ggplot(top,aes(y=TotalCasos,col=Country,x=Data))+
-  geom_line()+
-  #geom_segment(aes(xend = today()-1, yend = NovosCasos), linetype =2, colour = Country) +
-  geom_text(aes(x = today()-1, label = Country), hjust = 0) + 
-  transition_reveal(Data)+theme_minimal()+view_follow(fixed_x = T)+
-  labs(x="Data",y="Total de casos")
-animate(g_linha_CasosConf, renderer = gifski_renderer(loop = FALSE), nframes=300)
-
-
+  labs(title='Novos casos',
+       x="Data ", y=" ",col = "País")
+animate(g_linha_novos_casos, nframes = 300, fps = 25, end_pause = 50)
 
 # --------------------------- Base para o mapa -------------------------------------#
 
-#Para o mapa nÃ£o agregaremos os territÃ³rios independentes ao seu paÃ­s 'dono' sempre que possÃ­vel
-# Ex. os dados das Ilhas Malvinas ficarÃ£o no territÃ³rio da ilha, nÃ£o no Reino unido.
+#Para o mapa não agregaremos os territórios independentes ao seu país 'dono' sempre que possível
+# Ex. os dados das Ilhas Malvinas ficarão no território da ilha, não no Reino unido.
 world <- ne_countries(scale = "medium", returnclass = "sf")
 class(world)
 #View(world)
@@ -213,18 +242,19 @@ mapa<-mundo_atual %>%
   st_as_sf(coords = c("Long", "Lat"))%>% 
   st_set_crs("+proj=longlat +datum=WGS84")
 head(mapa)
+class(mapa)
 
-# A ideia Ã© pegar o poligono mais prÃ³ximo do ponto, ou seja, o polÃ­gono em que o ponto estÃ¡.
+# A ideia é pegar o poligono mais próximo do ponto, ou seja, o polígono em que o ponto está.
 mapa$geom<-world$name[st_nearest_feature(mapa$geometry, world$geometry)]
 mapa$geometry<-world$geometry[st_nearest_feature(mapa$geometry,world$geometry)] 
 head(mapa)
 
 
-#Para conferir se a junÃ§Ã£o foi feita de forma correta:
+#Para conferir se a junção foi feita de forma correta:
 #Primeiro tirar os acentos do nome da variavel geom:
 mapa$geom<-abjutils::rm_accent(mapa$geom)
 
-# Substiruir o '-' por espaÃ§o:
+# Substiruir o '-' por espaço:
 require(stringr)
 mapa$geom<-str_replace(mapa$geom,'-',' ')
 
@@ -235,35 +265,35 @@ mapa$Province<-str_replace(mapa$Province,'St','Saint')
 summary(mapa$Province==mapa$geom)
 summary(mapa$Country==mapa$geom)
 
-# Visualizar os paises/provincias que estÃ£o diferentes:
+# Visualizar os paises/provincias que estão diferentes:
 v<-mapa %>% filter(Country!=geom & Province!=geom) %>% select(Province,Country,geom,CasosConfirmados) 
 View(v)
 
-# Visualizar os que comeÃ§am com a mesma letra:
+# Visualizar os que começam com a mesma letra:
 v %>% filter(str_sub(v$Province,end=2)==str_sub(v$geom,end=2)) %>% View 
-# Todos esses correspondem ao territÃ³rio certo.
+# Todos esses correspondem ao território certo.
 
-# Visualizar os que nÃ£o comeÃ§am com a mesma letra:
+# Visualizar os que não começam com a mesma letra:
 v %>% filter(str_sub(v$Province,end=2)!=str_sub(v$geom,end=2)) %>% View 
 # Entre esses:
-# Jersey Ã© a maior Ilha de Chanell islands, entÃ£o faz sentido deixar neste territÃ³rio
-# PolinÃ©sia Francesa Ã© uma ilha prÃ³xima ? AutrÃ¡lia, mas que pertence a FranÃ§a
-# Incorporar a FranÃ§a? Faz sentido? SÃ£o territÃ³rios muito distantes entre si. Talvez seja melhor desconsiderar para o mapa
-# Talvez faÃ§a sentido incorporar Gilbraltar na Espanha jÃ¡ que o territÃ³rio pertence ao Reino Unido mas estÃ¡ dentro da espanha
+# Jersey é a maior Ilha de Chanell islands, então faz sentido deixar neste território
+# Polinésia Francesa é uma ilha próxima ? Autrália, mas que pertence a França
+# Incorporar a França? Faz sentido? São territórios muito distantes entre si. Talvez seja melhor desconsiderar para o mapa
+# Talvez faça sentido incorporar Gilbraltar na Espanha já que o território pertence ao Reino Unido mas está dentro da espanha
 
 
 
 # Agora precisamos criar uma base agrupada pela geometria que usaremos:
- mapa_g<-
-   mapa %>% group_by(geom) %>%
-   summarise(
-   Casos=sum(CasosConfirmados),
-     Mortes=sum(Mortes),
-   Recuperados= sum(Recuperados)
-   
-     )
+mapa_g<-
+  mapa %>% group_by(geom) %>%
+  summarise(
+    Casos=sum(CasosConfirmados),
+    Mortes=sum(Mortes),
+    Recuperados= sum(Recuperados)
+    
+  )
 mapa_g<- rename(mapa_g,Territorio=geom)
-# Construindo o mapa para ilustrar o nÃºmero de casos confirmados:
+# Construindo o mapa para ilustrar o número de casos confirmados:
 conf1<-ggplot()+
   geom_sf(data=world,fill='white')+
   geom_sf(data=mapa_g,aes(label=Territorio,geometry=geometry,fill=Casos))+
@@ -272,12 +302,31 @@ conf1<-ggplot()+
 plotly::ggplotly(conf1, tooltip = c("Casos",'Territorio'))
 
 
-# Construindo o mapa para ilustrar o nÃºmero de mortes:
+# Construindo o mapa para ilustrar o número de mortes:
 conf2<-ggplot()+
   geom_sf(data=world,fill='white')+
-  geom_sf(data=mapa_g,aes(abel=Territorio,geometry=geometry,fill=Mortes))+
+  geom_sf(data=mapa_g,aes(label=Territorio,geometry=geometry,fill=Mortes))+
   theme_classic()
 
 plotly::ggplotly(conf2,tooltip = c("Casos",'Territorio'))
 
+
+
+# ----------------------------- Algumas métricas: -----------------
+#Número de casos atual:
+numeros_mundo_atual <- mundo_atual %>%
+  group_by(Country) %>% 
+  summarise(Casos_atual = sum(CasosConfirmados),
+            Mortes_atual = sum(Mortes),
+            Recuperados_atual = sum(Recuperados))
+
+#Identificando a data do primeiro caso nos países:
+primeiro_pais <- mundo_pais %>% 
+  filter(TotalCasos > 0)  %>%
+  group_by(Country) %>%
+  mutate(PrimeiroCaso = min(Data)) 
+primeiro_pais
+
+#Contagem de dias desde o primeiro caso:
+primeiro_pais$Dias_desde_primeiro <- difftime(primeiro_pais$Data,primeiro_pais$PrimeiroCaso,units = "days")
 
