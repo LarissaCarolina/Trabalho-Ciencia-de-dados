@@ -1,0 +1,357 @@
+---
+title: "Covid-19"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: rows
+    theme: bootstrap
+    vertical_layout: scroll
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+```
+
+```{r Código mundo}
+#----------------------------------------------------------------------------------------------
+#---------------------------------- Dados Covid-19 - Mundo ------------------------------------
+#----------------------------------------------------------------------------------------------
+
+#Carregando os pacotes necessários:
+library(rnaturalearth)
+library(rnaturalearthdata)
+library(rnaturalearthhires)
+library(data.table)
+library(tidyverse)
+library(rgeos)
+library(sf)
+library(fuzzyjoin)
+
+
+# URLs com os dados da Johns Hopkins:
+url_confirmed <- "https://data.humdata.org/hxlproxy/api/data-preview.csv?url=https%3A%2F%2Fraw.githubusercontent.com%2FCSSEGISandData%2FCOVID-19%2Fmaster%2Fcsse_covid_19_data%2Fcsse_covid_19_time_series%2Ftime_series_covid19_confirmed_global.csv&filename=time_series_covid19_confirmed_global.csv"
+url_deaths <-    "https://data.humdata.org/hxlproxy/api/data-preview.csv?url=https%3A%2F%2Fraw.githubusercontent.com%2FCSSEGISandData%2FCOVID-19%2Fmaster%2Fcsse_covid_19_data%2Fcsse_covid_19_time_series%2Ftime_series_covid19_deaths_global.csv&filename=time_series_covid19_deaths_global.csv"
+url_recovered <- "https://data.humdata.org/hxlproxy/api/data-preview.csv?url=https%3A%2F%2Fraw.githubusercontent.com%2FCSSEGISandData%2FCOVID-19%2Fmaster%2Fcsse_covid_19_data%2Fcsse_covid_19_time_series%2Ftime_series_covid19_recovered_global.csv&filename=time_series_covid19_recoverd_global.csv"
+
+
+# Lendo os dados:
+confirmed<-read_csv(url(url_confirmed))
+#View(confirmed)
+deaths <- read_csv(url(url_deaths))
+#View(deaths)
+recovered <- read_csv(url(url_recovered))
+#View(recovered)
+
+#----------------------------- Processo de manipulação dos dados -----------------------#
+
+# Alterando o formato dos dados (queremos que os dados estejam em um formato "tidy"):
+confirmados<- confirmed %>% pivot_longer( cols=-c("Province/State" ,"Country/Region" ,"Lat", "Long") , 
+             names_to = "Data", 
+             values_to =  "CasosConfirmados")
+mortes <- deaths %>% pivot_longer(cols = -c("Province/State", "Country/Region", "Lat", "Long"),
+                                        names_to="Data", values_to="Mortes")
+recuperados <- recovered %>% pivot_longer(cols = -c("Province/State", "Country/Region", "Lat", "Long"),
+                                     names_to="Data", values_to="Recuperados")
+
+#View(confirmados)
+#View(mortes)
+#View(recuperados)
+
+
+# Juntando as tabelas (Confirmados, recuperados e mortes) em uma única tabela:
+mundo <- confirmados %>% 
+  left_join(recuperados, by=c("Country/Region", "Lat", "Long","Data")) %>% 
+  left_join(mortes, by=c("Country/Region", "Lat", "Long","Data")) %>% 
+  select("Province/State", "Country/Region", "Lat", "Long", "Data",
+                         "CasosConfirmados", "Mortes", "Recuperados")
+#View(mundo)
+
+#Renomeando as colunas Province e Country:
+mundo<-mundo %>% rename("Province"="Province/State")
+mundo<-mundo %>% rename("Country"="Country/Region")
+#names(mundo)
+
+# Conferindo a classe do banco e de cada uma das colunas:
+#class(mundo)
+#sapply(mundo,class)
+
+# É necessário converter a classe da coluna de data para date:
+require(lubridate)
+#head(mundo$Data)
+mundo$Data<-mdy(mundo$Data)
+#summary(mundo$Data)
+
+# Banco de dados com os totais mais atuais (será utilizado no mapa).
+# No aplicativo, pretendemos colocar um filtro de data. De maneira que utilizar o filtro, o mapa seja de acordo a essa data. 
+
+
+
+# A seguir criaremos uma base agrupada por país:
+mundo_pais<-mundo %>%
+  group_by(Country,Data) %>%
+  summarise(
+    TotalCasos=sum(CasosConfirmados),
+    TotalMortes=sum(Mortes),
+    TotalRecuperados=sum(Recuperados)
+  )
+
+
+# A seguir criaremos as colunas novos Casos, novos Recuperados e novos Mortos por dia:
+# Falta estruturar melhor essa parte, mas a ideia é essa. 
+# Ordenar por pais e data, aplicar o diff por país.
+# a tapply retorna uma lista, temos q voltar pro banco
+mundo_pais<-mundo_pais[order(mundo_pais$Country,mundo_pais$Data),]
+novos<-tapply(mundo_pais$TotalCasos,mundo_pais$Country,diff)
+
+# É necessário colocar o número de casos no dia 1. Porque a função diff exclui esse valor.
+# Por enquento faremos assim:
+for( i in names(novos)){
+  casos_pais<-filter(mundo_pais,Country==i) %>% select(TotalCasos) #Pegando o data frame com o n?mero de casos do pa?s em quest?o.
+  novos[[i]]<-c(as.numeric(casos_pais[1,2]),novos[[i]]) #Conacatena o n?mero de caso no pa?s no dia 1 com o vetor de novos casos.
+}
+
+# Voltando para o formato de df:
+dados3<-cbind(plyr::ldply(novos, data.frame))
+
+# Acrescentando a coluna de novos casos no banco:
+mundo_pais$NovosCasos<-dados3$X..i..
+
+# Verificando o resultado:
+#View(mundo_pais) # Funcionou!
+
+# Iremos repetir o mesmo processo para os novos casos recuperados por dia:
+novos<-tapply(mundo_pais$TotalRecuperados,mundo_pais$Country,diff)
+
+for( i in names(novos)){
+  casos_pais<-filter(mundo_pais,Country==i) %>% select(TotalRecuperados)
+  novos[[i]]<-c(as.numeric(casos_pais[1,2]),novos[[i]])
+}
+
+# Voltando para o formato df:
+dados3<-plyr::ldply(novos, data.frame)
+
+#Acrescentando a nova coluna no banco:
+mundo_pais$NovosRec<-dados3$X..i..
+
+# Iremos repetir o mesmo processo para os novos mortos por dia:
+novos<-tapply(mundo_pais$TotalMortes,mundo_pais$Country,diff)
+
+
+for(i in names(novos)){
+  casos_pais<-filter(mundo_pais,Country==i) %>% select(TotalMortes)
+  novos[[i]]<-c(as.numeric(casos_pais[1,2]),novos[[i]])
+}
+
+# Voltando para o formato df
+dados3<-plyr::ldply(novos, data.frame)
+
+# Acrescentado a nova coluna no banco:
+mundo_pais$NovosMortos<-dados3$X..i..
+
+#Conferindo o resultado:
+#View(mundo_pais)
+#summary(mundo_pais$NovosCasos)
+```
+
+
+
+# Mapa e Gráficos {data-navmenu="Mundo"}
+
+
+
+## Painel de filtros {.sidebar}
+
+```{r}
+inputPanel(
+  selectInput('tipo_plot',label=h4('Selecione uma informação para o mapa'), choices = list('Total de casos confirmados'=1,'Total de mortos'=2,'Total de recuperados'=3),selected = 1)
+  )
+
+inputPanel(
+  selectInput('pais',label=h4('Selecione um país'), choices = c('Todos',levels(as.factor(mundo_pais$Country))))
+  )
+
+inputPanel(
+  dateInput('data',label=h4('Selecione uma data'),value = max(mundo$Data),max =max(mundo$Data), min =min(mundo$Data))
+  )
+
+```
+
+
+```{r Fazendo os bancos reativos}
+
+dados_data<- reactive({
+    mundo %>% 
+  filter(Data==input$data)
+})
+
+
+dados_pais<- reactive({
+  if(input$pais =='Todos'){
+    mundo_pais} else {
+      
+   mundo_pais %>% 
+  filter(Country==input$pais)
+ } 
+})
+
+
+
+```
+
+## Cartoes
+
+### c1
+```{r}
+renderValueBox(valueBox('2020-xx-xx','Data caso'))
+
+```
+
+### c2
+
+```{r}
+renderValueBox(valueBox(899999,'Número de casos'))
+```
+
+### c2
+
+```{r}
+renderValueBox(valueBox(899999,'Número de casos'))
+```
+
+### c2
+
+```{r}
+renderValueBox(valueBox(899999,'Número de casos'))
+```
+
+### c2
+
+```{r}
+renderValueBox(valueBox(899999,'Número de casos'))
+```
+
+## Mapa
+
+```{r Preparação dos dados}
+world <- ne_countries(scale = "medium", returnclass = "sf")
+
+mapa_g<-reactive({
+  aux<-  dados_data() %>% 
+  st_as_sf(coords = c("Long", "Lat"))%>% 
+  st_set_crs("+proj=longlat +datum=WGS84")
+  aux$geom<-world$name[st_nearest_feature(aux$geometry, world$geometry)]
+  aux$geometry<-world$geometry[st_nearest_feature(aux$geometry,world$geometry)] 
+  aux2<-
+   aux %>% group_by(geom) %>%
+   summarise(
+   Casos=sum(CasosConfirmados),
+     Mortes=sum(Mortes),
+   Recuperados= sum(Recuperados))
+  aux2<- rename(aux2,Territorio=geom)
+  return(aux2)
+  
+})
+
+```
+
+```{r}
+require(plotly)
+
+renderPlotly({
+    
+    if (input$tipo_plot ==1){
+    conf1<-ggplot()+
+      geom_sf(data=world,fill='white')+
+      geom_sf(data=mapa_g(),aes(label=Territorio,geometry=geometry,fill=Casos))+
+      theme_classic()+
+      ggtitle(paste('Total de casos  no dia',input$data))
+  
+    plotly::ggplotly(conf1, tooltip = c("Casos",'Territorio'))
+    }else if (input$tipo_plot ==2){
+      conf1<-ggplot()+
+        geom_sf(data=world,fill='white')+
+        geom_sf(data=mapa_g(),aes(label=Territorio,geometry=geometry,fill=Mortes))+
+        theme_classic()+
+        ggtitle(paste('Total de mortos no dia',input$data))
+  
+      plotly::ggplotly(conf1, tooltip = c("Mortes",'Territorio'))
+    }else if (input$tipo_plot ==3){
+      conf1<-ggplot()+
+        geom_sf(data=world,fill='white')+
+        geom_sf(data=mapa_g(),aes(label=Territorio,geometry=geometry,fill=Recuperados))+
+        theme_classic()+
+        ggtitle(paste('Total de recuperados no dia',input$data))
+  
+      plotly::ggplotly(conf1, tooltip = c("Recuperados",'Territorio'))
+    }
+
+})
+
+
+
+```
+
+
+## Graficos
+
+```{r Dados ara gráficos}
+d<-reactive({
+  a<- dados_pais() %>% 
+    filter(Data<=input$data) %>% 
+    group_by(Data) %>% 
+    summarise(NovosMortos=sum(na.omit(NovosMortos)),
+              NovosCasos=sum(NovosCasos),
+              NovosRec=sum(na.omit(NovosRec)))
+})
+```
+
+
+### Novos confirmados
+
+```{r}
+renderPlotly({
+  g<- ggplot(d(),aes(x=Data,y=NovosCasos))+
+    geom_line(col='darkblue')+
+    theme_classic()
+  ggplotly(g)
+})
+```
+
+
+### Novos mortos
+
+```{r}
+renderPlotly({
+  
+  g<- ggplot(d(),aes(x=Data,y=NovosMortos))+
+    geom_line(col='darkblue')+
+    theme_classic()
+  ggplotly(g)
+})
+```
+
+
+### Novos recuperados
+
+```{r}
+renderPlotly({
+  g<- ggplot(d(),aes(x=Data,y=NovosRec))+
+    geom_line(col='darkblue')+
+    theme_classic()
+  ggplotly(g)
+})
+```
+
+
+
+# Animações e Twitter {data-navmenu="Mundo"}
+
+amanda vai inserir
+
+
+# Mapa e Gráficos {data-navmenu="Brasil"}
+Ana vai inserir
+
+# Animações e Twitter {data-navmenu="Brasil"}
+
+amanda vai inserir
