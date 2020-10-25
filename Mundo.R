@@ -63,11 +63,18 @@ teste<-mundo %>%
 View(teste)
 
 auxiliar<-mundo %>% 
-  filter(!is.na(Recuperados)&!is.na(Mortes))
+  filter(!paste(mundo$`Province/State`,mundo$`Country/Region`)%in% 
+           paste(mundo$`Province/State`,teste$`Country/Region`))
 
 teste<-teste %>% select("Province/State",'Country/Region',Lat=Lat.x,Long=Long.y,Data,
                         CasosConfirmados,Mortes,Recuperados)
 mundo <-rbind(auxiliar,teste)  
+
+# Falta so o Canadá!!!!
+
+# Gambiarra a gente aceita, só não aceita a derrota
+
+
 
 #Renomeando as colunas Province e Country:
 mundo<-mundo %>% rename("Province"="Province/State")
