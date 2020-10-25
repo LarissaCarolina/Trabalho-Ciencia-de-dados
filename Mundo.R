@@ -51,6 +51,24 @@ mundo <- confirmados %>%
                          "CasosConfirmados", "Mortes", "Recuperados")
 #View(mundo)
 
+# Problema: Alguns países com informações diferentes nas  3 bases
+
+# Ver quais:
+
+teste<-mundo %>% 
+  filter(is.na(Recuperados)|is.na(Mortes)) %>% 
+  select("Province/State","Country/Region",Data,CasosConfirmados) %>%
+  inner_join(mortes,by=c("Province/State",'Country/Region','Data')) %>%
+  inner_join(recuperados,by=c("Province/State",'Country/Region','Data'))
+View(teste)
+
+auxiliar<-mundo %>% 
+  filter(!is.na(Recuperados)&!is.na(Mortes))
+
+teste<-teste %>% select("Province/State",'Country/Region',Lat=Lat.x,Long=Long.y,Data,
+                        CasosConfirmados,Mortes,Recuperados)
+mundo <-rbind(auxiliar,teste)  
+
 #Renomeando as colunas Province e Country:
 mundo<-mundo %>% rename("Province"="Province/State")
 mundo<-mundo %>% rename("Country"="Country/Region")
