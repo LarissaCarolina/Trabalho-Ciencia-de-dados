@@ -208,7 +208,7 @@ atokenSecret<-'HKEsqOh6Kix50iYcunURpdLJBFo8MSRU2QMKmhQDINjJ6'
 setup_twitter_oauth(akey,asecret,atoken,atokenSecret)
 1
 #pesquisar assunto ou hashtag
-p<-searchTwitter('covid19',n=100,lang="pt")
+p<-searchTwitter('covid19',n=100,lang="pt", resultType = 'recent') ## locale ou geocode
 dfp<-twListToDF(p)
 dfp$text<-str_to_lower(dfp$text)
 
