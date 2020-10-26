@@ -14,6 +14,9 @@ require(tidyverse)
 require(data.table)
 require(lubridate)
 require(gganimate)
+library(rio)
+library(httr)
+library(jsonlite)
 #########################
 
 #### Brasil ####
@@ -21,8 +24,38 @@ require(gganimate)
 ###################################
 #   Manipulando o banco de dados  #
 ###################################
-url <- "https://github.com/sjlva/Covid19BR/blob/master/rds/covid_ms.rds?raw=true"
-dados <- readr::read_rds(url(url))
+# url para baixar os dados:
+url <-  "https://xx9p7hp1p7.execute-api.us-east-1.amazonaws.com/prod/PortalGeral"
+covid <- GET(url, 
+             add_headers("x-parse-application-id" = "unAFkcaNDeXajurGB7LChj8SgQYS2ptm"))
+
+# Resultado:
+results <- covid %>% 
+  content()
+
+#results
+
+# url para baixar os dados:
+url_data <- results$results[[1]]$arquivo$url
+url_data
+
+
+if(str_detect(url_data, ".rar")){
+  file_name <- paste0(getwd(),"/data/covid.rar")
+  download.file(url_data, destfile = file_name)
+  out <- archive(file_name)
+  archive_extract(out, "data")
+  dados <- rio::import(paste0("data/", out$path)) %>% 
+    as_tibble()
+} else if (str_detect(url_data, "xlsx")){
+  dados <- rio::import(url_data, readxl =F, detectDates = T) %>% 
+    as_tibble()
+} else{
+  dados <- rio::import(url_data) %>% 
+    as_tibble()
+}
+
+ultima_atualizacao <- results$results[[1]]$dt_atualizacao
 
 #View(dados)
 
@@ -88,6 +121,8 @@ ifelse(nrow(filter(check_mg, contagem != 184)) == 0, "Dados ok", "Dados Errados"
 #### Excluir a base inteira ####
 rm("dados", "check_mg")
 
+dados_estado$data <- ymd(dados_estado$data)
+
 
 ###################################
 #           Descritivas           #
@@ -95,7 +130,7 @@ rm("dados", "check_mg")
 
 #### Brasil ####
 
-View(dados_brasil)
+#View(dados_brasil)
 
 ###  cartoes: ###
 
@@ -171,7 +206,7 @@ asecret<-'JPA5NePjI1wchJ5tTA7S94LEskmuMWb8bCIJBQa4ozECcze8x6'
 atoken<-'588512062-cnhAyXUANA71u9isu5Smr490l4e8ebOb5eePpDBQ'
 atokenSecret<-'HKEsqOh6Kix50iYcunURpdLJBFo8MSRU2QMKmhQDINjJ6'
 setup_twitter_oauth(akey,asecret,atoken,atokenSecret)
-
+1
 #pesquisar assunto ou hashtag
 p<-searchTwitter('covid19',n=100,lang="pt")
 dfp<-twListToDF(p)
@@ -246,7 +281,7 @@ g_corrida <- rank %>%
   ease_aes('cubic-in-out') +
   labs(title='Estados com os seis maiores números de casos confirmados atualmente',
        subtitle='Total de casos confirmados em {round(frame_time,0)}', x=" ", y=" ",fill = "Estado (UF)")
-animate(g_corrida, nframes = 100, fps = 25, end_pause = 50)
+animate(g_corrida, nframes = 200, fps = 25, end_pause = 50)
 
 
 ## Animação: Novos Casos
