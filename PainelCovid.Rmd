@@ -345,8 +345,64 @@ renderPlotly({
 
 
 # Animações e Twitter {data-navmenu="Mundo"}
+```{r include=FALSE}
+library(twitteR)
+library(wordcloud2)
+library(stringr)
 
-amanda vai inserir
+akey<-'SNjqQpunmVROj78bpSrbXaY42'
+asecret<-'JPA5NePjI1wchJ5tTA7S94LEskmuMWb8bCIJBQa4ozECcze8x6'
+atoken<-'588512062-cnhAyXUANA71u9isu5Smr490l4e8ebOb5eePpDBQ'
+atokenSecret<-'HKEsqOh6Kix50iYcunURpdLJBFo8MSRU2QMKmhQDINjJ6'
+setup_twitter_oauth(akey,asecret,atoken,atokenSecret)
+1
+#pesquisar assunto ou hashtag
+p<-searchTwitter('covid19',n=1000,lang="en", resultType = 'recent')
+dfp<-twListToDF(p)
+dfp$text<-str_to_lower(dfp$text)
+
+
+lista_palavras <- strsplit(dfp$text, "\\W+")
+vetor_palavras <- unlist(lista_palavras)
+library(tm)
+library(SnowballC)
+word.corpus <- Corpus(VectorSource(vetor_palavras)) 
+
+##
+
+word.corpus<-word.corpus%>%
+  tm_map(removePunctuation)%>% ##eliminar pontuacao
+  tm_map(removeNumbers)%>% #sem numeros
+  tm_map(stripWhitespace)# sem espacos
+
+word.corpus<-word.corpus%>%
+  tm_map(tolower)%>% ##make all words lowercase
+  tm_map(removeWords, stopwords("en"))
+
+word.corpus <- tm_map(word.corpus, stemDocument)
+word.corpus <- tm_map(word.corpus, removeWords, c("https"))
+word.counts <- as.matrix(TermDocumentMatrix(word.corpus))
+word.freq2 <- sort(rowSums(word.counts), decreasing = TRUE)
+word.freq2<- rownames_to_column(as.data.frame(word.freq2))
+head(word.freq2)
+#frequencia_palavras <- table(vetor_palavras)
+#frequencia_ordenada_palavras <- sort(frequencia_palavras, decreasing=TRUE)
+library(wordcloud)
+```
+
+
+
+```{r}
+hk =  wordcloud2(word.freq2, size = 1,color = "random-light", backgroundColor = "black")
+
+library(htmlwidgets)
+#install.packages("webshot")
+#webshot::install_phantomjs()
+#library(wordcloud2)
+#hw = wordcloud2(demoFreq,size = 3)
+saveWidget(hk,"1.html",selfcontained = F)
+webshot::webshot("1.html","1.png",vwidth = 700, vheight = 500, delay =10)
+```
 
 
 # Mapa e Gráficos {data-navmenu="Brasil"}
@@ -354,4 +410,63 @@ Ana vai inserir
 
 # Animações e Twitter {data-navmenu="Brasil"}
 
-amanda vai inserir
+
+```{r include=FALSE}
+library(twitteR)
+library(wordcloud2)
+library(stringr)
+
+akey<-'SNjqQpunmVROj78bpSrbXaY42'
+asecret<-'JPA5NePjI1wchJ5tTA7S94LEskmuMWb8bCIJBQa4ozECcze8x6'
+atoken<-'588512062-cnhAyXUANA71u9isu5Smr490l4e8ebOb5eePpDBQ'
+atokenSecret<-'HKEsqOh6Kix50iYcunURpdLJBFo8MSRU2QMKmhQDINjJ6'
+setup_twitter_oauth(akey,asecret,atoken,atokenSecret)
+1
+#pesquisar assunto ou hashtag
+p<-searchTwitter('covid19',n=1000,lang="pt", resultType = 'recent')
+dfp<-twListToDF(p)
+dfp$text<-str_to_lower(dfp$text)
+
+
+lista_palavras <- strsplit(dfp$text, "\\W+")
+vetor_palavras <- unlist(lista_palavras)
+library(tm)
+library(SnowballC)
+word.corpus <- Corpus(VectorSource(vetor_palavras)) 
+
+##
+
+word.corpus<-word.corpus%>%
+  tm_map(removePunctuation)%>% ##eliminar pontuacao
+  tm_map(removeNumbers)%>% #sem numeros
+  tm_map(stripWhitespace)# sem espacos
+
+word.corpus<-word.corpus%>%
+  tm_map(tolower)%>% ##make all words lowercase
+  tm_map(removeWords, stopwords("por"))
+
+word.corpus <- tm_map(word.corpus, stemDocument)
+word.corpus <- tm_map(word.corpus, removeWords, c("https"))
+word.counts <- as.matrix(TermDocumentMatrix(word.corpus))
+word.freq3 <- sort(rowSums(word.counts), decreasing = TRUE)
+word.freq3<- rownames_to_column(as.data.frame(word.freq3))
+head(word.freq3)
+#frequencia_palavras <- table(vetor_palavras)
+#frequencia_ordenada_palavras <- sort(frequencia_palavras, decreasing=TRUE)
+library(wordcloud)
+```
+
+
+
+```{r}
+hw=  wordcloud2(word.freq3,  size = 0.5,color = "random-light", backgroundColor = "black")
+
+library(htmlwidgets)
+#install.packages("webshot")
+#webshot::install_phantomjs()
+#library(wordcloud2)
+#hw = wordcloud2(demoFreq,size = 3)
+saveWidget(hw,"1.html",selfcontained = F)
+webshot::webshot("1.html","1.png",vwidth = 700, vheight = 500, delay =10)
+```
+
