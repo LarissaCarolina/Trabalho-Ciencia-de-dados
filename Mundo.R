@@ -54,17 +54,17 @@ mundo <- confirmados %>%
 # Problema: Alguns países com informações diferentes nas  3 bases
 
 # Ver quais:
-
 teste<-mundo %>% 
   filter(is.na(Recuperados)|is.na(Mortes)) %>% 
   select("Province/State","Country/Region",Data,CasosConfirmados) %>%
   inner_join(mortes,by=c("Province/State",'Country/Region','Data')) %>%
   inner_join(recuperados,by=c("Province/State",'Country/Region','Data'))
-View(teste)
 
 auxiliar<-mundo %>% 
-  filter(!paste(mundo$`Province/State`,mundo$`Country/Region`)%in% 
-           paste(mundo$`Province/State`,teste$`Country/Region`))
+  filter(!paste(mundo$`Province/State`,mundo$`Country/Region`,mundo$Data)%in% 
+           paste(teste$`Province/State`,teste$`Country/Region`,teste$Data))
+
+
 
 teste<-teste %>% select("Province/State",'Country/Region',Lat=Lat.x,Long=Long.y,Data,
                         CasosConfirmados,Mortes,Recuperados)
