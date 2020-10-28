@@ -2,7 +2,7 @@
 #             Trabalho de Ciencia de Dados            #
 #     Ana Clara, Amanda, Larisa, Leticia, Natalia     #
 #######################################################
-
+#
 #setwd("~/Nat?lia/Ciencia de dados/Brasil")
 rm(list=ls(all=TRUE))
 
@@ -14,6 +14,9 @@ require(tidyverse)
 require(data.table)
 require(lubridate)
 require(gganimate)
+library(rio)
+library(httr)
+library(jsonlite)
 #########################
 
 #### Brasil ####
@@ -21,8 +24,38 @@ require(gganimate)
 ###################################
 #   Manipulando o banco de dados  #
 ###################################
-url <- "https://github.com/sjlva/Covid19BR/blob/master/rds/covid_ms.rds?raw=true"
-dados <- readr::read_rds(url(url))
+# url para baixar os dados:
+url <-  "https://xx9p7hp1p7.execute-api.us-east-1.amazonaws.com/prod/PortalGeral"
+covid <- GET(url, 
+             add_headers("x-parse-application-id" = "unAFkcaNDeXajurGB7LChj8SgQYS2ptm"))
+
+# Resultado:
+results <- covid %>% 
+  content()
+
+#results
+
+# url para baixar os dados:
+url_data <- results$results[[1]]$arquivo$url
+url_data
+
+
+if(str_detect(url_data, ".rar")){
+  file_name <- paste0(getwd(),"/data/covid.rar")
+  download.file(url_data, destfile = file_name)
+  out <- archive(file_name)
+  archive_extract(out, "data")
+  dados <- rio::import(paste0("data/", out$path)) %>% 
+    as_tibble()
+} else if (str_detect(url_data, "xlsx")){
+  dados <- rio::import(url_data, readxl =F, detectDates = T) %>% 
+    as_tibble()
+} else{
+  dados <- rio::import(url_data) %>% 
+    as_tibble()
+}
+
+ultima_atualizacao <- results$results[[1]]$dt_atualizacao
 
 #View(dados)
 
@@ -80,13 +113,15 @@ qnt_dias_mg <- as.numeric(periodo_mg, "days") + 1
 
 #checando a quantidade de dados por municipio:
 check_mg <- dados_mg_mun %>%
-              group_by(municipio) %>%
-              summarise(contagem = length(municipio))
+  group_by(municipio) %>%
+  summarise(contagem = length(municipio))
 ifelse(nrow(dados_mg_mun) == 853*qnt_dias_mg, "Dados ok", "Dados Errados")
 ifelse(nrow(filter(check_mg, contagem != 184)) == 0, "Dados ok", "Dados Errados")
 
 #### Excluir a base inteira ####
 rm("dados", "check_mg")
+
+dados_estado$data <- ymd(dados_estado$data)
 
 
 ###################################
@@ -95,7 +130,7 @@ rm("dados", "check_mg")
 
 #### Brasil ####
 
-View(dados_brasil)
+#View(dados_brasil)
 
 ###  cartoes: ###
 
@@ -122,36 +157,26 @@ mean(dados_brasil$obitosNovos[(nrow(dados_brasil)-14):nrow(dados_brasil)], na.rm
 ########################  Tentar fazer um mapinha do Brasil no leaflet
 
 library(rgdal)   # para carregar o shape
-library(leaflet)
-
-## Lembrar de baixar os dados site do ibge, eles est?o dentro de uma pasta chamada Mapa
-shp <- readOGR("Mapa\\.", "BR_UF_2019", stringsAsFactors=FALSE, encoding="UTF-8")
-
-Brasillastadate<- dados_estado %>% filter(data == max(data))
-brasileiropg <- merge(shp,Brasillastadate, by.x = "CD_UF", by.y = "coduf")
-proj4string(brasileiropg) <- CRS("+proj=longlat +datum=WGS84 +no_defs")
-
-Encoding(brasileiropg$NM_ESTADO) <- "UTF-8"
-
-brasileiropg$Score[is.na(brasileiropg$Score)] <- 0
+if(!require(brmap)){install.packages("brmap");library(brmap)} 
 
 
-pal <- colorBin("Blues",domain = NULL,n=5) #cores do mapa
+Brasillastadate<- dados_estado %>% 
+  filter(data == max(data)) %>%
+  left_join(brmap_estado, by = c("coduf" = "estado_cod"))%>%
+  as_tibble()
 
-state_popup <- paste0("<strong>Estado: </strong>", 
-                      brasileiropg$estado, 
-                      "<br><strong>Casos: </strong>", 
-                      brasileiropg$casosAcumulado)
-leaflet(data = brasileiropg) %>%
-  addProviderTiles("CartoDB.Positron") %>%
-  addPolygons(fillColor = ~pal(brasileiropg$casosAcumulado), 
-              fillOpacity = 0.8, 
-              color = "#BDBDC3", 
-              weight = 1, 
-              popup = state_popup) %>%
-  addLegend("bottomright", pal = pal, values = ~brasileiropg$casosAcumulado,
-            title = "Total de casos",
-            opacity = 1)
+
+d<- ggplot() + 
+  geom_sf(data =Brasillastadate ,aes(geometry=geometry,fill= casosAcumulado, label=estado))+
+  theme(
+    panel.background = element_blank(), 
+    panel.grid.major = element_line(color = "transparent"), 
+    axis.text = element_blank(), 
+    axis.ticks = element_blank(),
+    plot.title = element_text(hjust = 0.5) ## hjus = 0.5 centraliza o título
+  )
+
+plotly::ggplotly(d, tooltip = c('estado',"casosAcumulado"))
 
 
 
@@ -171,9 +196,9 @@ asecret<-'JPA5NePjI1wchJ5tTA7S94LEskmuMWb8bCIJBQa4ozECcze8x6'
 atoken<-'588512062-cnhAyXUANA71u9isu5Smr490l4e8ebOb5eePpDBQ'
 atokenSecret<-'HKEsqOh6Kix50iYcunURpdLJBFo8MSRU2QMKmhQDINjJ6'
 setup_twitter_oauth(akey,asecret,atoken,atokenSecret)
-
+1
 #pesquisar assunto ou hashtag
-p<-searchTwitter('covid19',n=100,lang="pt")
+p<-searchTwitter('covid19',n=100,lang="pt", resultType = 'recent') ## locale ou geocode
 dfp<-twListToDF(p)
 dfp$text<-str_to_lower(dfp$text)
 
@@ -204,4 +229,71 @@ head(word.freq)
 #frequencia_palavras <- table(vetor_palavras)
 #frequencia_ordenada_palavras <- sort(frequencia_palavras, decreasing=TRUE)
 
-wordcloud2(word.freq, size=0.8)
+wordcloud2(word.freq, size=0.5,color = "random-light", backgroundColor = "black")
+
+
+#---------------------- Animações---------------------
+
+##Animação: Corrida de barras ordenado S2, tô emocionada!
+
+#Aqui iremos pegar o top 6 de casos atuais.
+brasil_atual <-
+  dados_estado %>% 
+  filter(data==max(data))
+
+top_estados<-brasil_atual %>%
+  top_n(6,casosAcumulado) %>%
+  select(estado)
+
+#Filtrando a base atual pelos países selecionados anteriormente.
+top<-dados_estado %>%
+  filter(estado %in% c(top_estados$estado))
+
+# Para que o gráfico fique ordenado em cada data, precisamos criar do número de casos por data:
+rank<-top %>% 
+  select(regiao, data, estado, casosAcumulado) %>% 
+  group_by(data) %>%
+  arrange(-casosAcumulado) %>%
+  mutate(rank=row_number())
+
+
+g_corrida <- rank %>%
+  ggplot(aes(x = -rank,y = casosAcumulado, group = estado)) +
+  geom_tile(aes(y = casosAcumulado / 2, height = casosAcumulado, fill = estado), width = 0.9) +
+  geom_text(aes(label = estado), hjust = "right", colour = "black", fontface = "bold", nudge_y = -100000) +
+  geom_text(aes(label = casosAcumulado), hjust = "left", nudge_y = 100000, colour = "grey30") +
+  coord_flip(clip="off") +
+  # gganimate
+  transition_time(data) +
+  theme_minimal()+
+  theme(axis.text.y=element_blank(), 
+        axis.ticks.y=element_blank())+
+  ease_aes('cubic-in-out') +
+  labs(title='Estados com os seis maiores números de casos confirmados atualmente',
+       subtitle='Total de casos confirmados em {round(frame_time,0)}', x=" ", y=" ",fill = "Estado (UF)")
+animate(g_corrida, nframes = 200, fps = 25, end_pause = 50)
+
+
+## Animação: Novos Casos
+#Acho que o gráfico com mais de duas localidades fica muito poluído, vou fixar um top 2.
+brasil_atual <-
+  dados_estado %>% 
+  filter(data==max(data))
+
+top_estados<-brasil_atual %>%
+  top_n(2,casosAcumulado) %>%
+  select(estado)
+
+#Filtrando a base atual pelos países selecionados anteriormente.
+top<-dados_estado %>%
+  filter(estado %in% c(top_estados$estado))
+
+g_linha_novos_casos<-ggplot(top,aes(y=casosNovos, col= estado,x=data))+
+  geom_line()+
+  geom_point() +
+  transition_reveal(data)+
+  theme_minimal()+
+  view_follow(fixed_x = T)+
+  labs(title='Número de novos casos',
+        x=" ", y=" ",col = "Estado (UF)")
+animate(g_linha_novos_casos, nframes = 300, fps = 25, end_pause = 50)

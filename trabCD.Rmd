@@ -1,7 +1,8 @@
 ---
-lang: "pt-BR"
-output: 
-  pdf_document
+lang: pt-BR
+output:
+  word_document: default
+  pdf_document: default
 ---
 
 \begin{titlepage}
@@ -88,15 +89,60 @@ Tentar automatizar a extração dos dados do portal do ministério da saúde.
 \newpage
 
 # Introdução
-Falar brevemente sobre a pandemia e objetivo do trabalho
+  Atualmente, estamos vivendo um surto de uma doença infecciosa chamada Covid-19 que é causada pelo novo coronavírus (Sars-Cov-2). A doença foi identificada pela primeira vez em Wuhan, na província de Hubei, República Popular da China.
+
+  Em 11 de março de 2020, a Organização Mundial de Saúde (OMS) declarou que estávamos vivendo uma pandemia, devido à rápida disseminação geográfica que a doença apresentou.
+
+  Apesar do mundo inteiro viver sob estado de alerta por essa doença, os países a enfrentam com  diferentes intensidades. Muitas razões podem ser atribuídas para esse fato, por exemplo os recursos que o países detêm para investimento em infraestura para o combate à doença, posicionamento dos governantes no sentido de fornecer à população condições para se protegerem, até mesmo a  postura da população em relação ao cumprimento das medidas de segurança, entre outros.
+
+  A partir deste trabalho iremos fornecer uma visão sobre o panorama da doença atualmente. O produto final será um painél desenvolvido em shiny que trará análises descritivas visuais e métricas de interesse sobre o momento atual da pandemia no mundo e no Brasil.
+
+  A fonte utilizada para a busca dos dados em nível mundial foi o repositório de dados sobre a Covid-19 administrado pela universidade Johns Hopkins (EUA), já para buscar dados em nível Brasil utilizamos o portal Coronavirus-Brasil gerenciado pelo Ministério da Saúde.
+
 
 # Manipulação dos dados
- Descrever como fizemos a manipulação dos dados
+ Uma vez utilizadas fontes de dados diferentes, o processo de manipulação dos dados também ocorreu de maneira distinta nos dados referentes ao mundo e ao Brasil. Iremos detalhar a seguir cada um deles. Nesta etapa, as integrantes encarregadas deste tratamento foram Larissa Carolina e Letícia Canhestro nos dados do mundo e Ana Clara, Amanda Xavier e Natália Oliveira nos dados do Brasil.
  
 ## Dados do Mundo
-
+   Como dito anteriormente, a fonte de dados utilizada para essa etapa foi o repositório da Universidade Johns Hopkins (EUA). A estrutura dos dados seguia um formato não muito adequado para a análise, sendo nessário um tempo considerável de trabalho no tratamento dos mesmos.
+   
+   Primeiramente, os dados estavam divididos em três bases diferentes, uma para os registros de casos confirmados, outra para as mortes, por fim uma base dedicada a registros de número de recuperados. Além disso, os dados estavem dispostos de maneira que cada país + província formava uma única linha no banco e cada data era acrescentada em formato de coluna.
+   
+  
+   Dessa forma, foi necessário primeiro altera o formato de cada uma das bases, passando essas para o formato 'arrumado' (*tidy*) neste cada variável é uma coluna e as linhas são os valores observados para as mesmas. Isso foi feito utilizando a função *pivot_longer* do pacote **tidyverse**.
+   
+   Feito isso, precisamos juntar as três bases de maneira a obter uma única tabela com as informações desejadas. Isso foi feito utilizando a função de junção *left_join*, os atributos utilizados como chaves foram *Province/State*, *Country/Region*, *Lat* e *Long* que são comuns às três bases. Neste ponto, percebemos que algumas localidades estavam com informações diferentes nas três bases, para solucionar tal problema identificamos quais eram essas localidas e a tratamos de maneira diferenciada utilizando um data.frame auxiliar, por fim fizemos a união dos dados que se uniram certo aos que precisaram ser tratados separadamente.
+   
+   Após isso, outras manipulações básicas foram feitas como por exemplo verificação da classe das colunas, adequação do tipo delas ao desejado (Ex.: Transformação da coluna de data para o formato date, isso foi feito utilizando a função *mdy* do pacote **lubridate**).
+   
+   Algo importante que nos demandou um cuidado especial no tratamento desses dados foi o fato de não existir a coluna que nos trouxesse as informações de novos casos, novos óbitos e novos recuperados. Pensamos em utilizar a função *diff* de maneira direta nos dados para obter essas informações. Porém, ao tentarmos percebemos que a informação do primerio registro não era retornada isso gerava inconsistência nos dados. Fizemos um outro teste utilizando uma manipulação com a função *lag* com o lag de um passo. Neste caso, o primeiro registro era retornado, porém com dado ausente, já que não havia valor disponível a ser subtraído do primeiro registro. Por fim, fizemos uma manipulação que utilizava a função *diff*, mas que agregava o primeiro valor de casos ao primeiro registro da coluna de novos (casos, óbitos ou recuperados) para cada país.
+   
+   Um outra etapa para a conclusão desse processo de manipulação dos dados foi necessário para a construção dos visuais de mapa. Para essa etapa, como estamos interessados em vizualizar de maneira espacial o comportamento das métricas de interesse, achamos mais adequado não agrupar os territórios afastado ao seu país "dono". Aqui, utilizamos funções de manipulação de textos como a  *rm_acent* do pacote **abjutils** e outras funções como *str_replace* do pacote **stringr**.
+   
 ## Dados do Brasil
-
+Descrever o proceso de manipulação dos dados.
 # Criação das visualizações
+  As visualizações construídas foram as mesmas tanto para os dados do Mundo quanto para os dados do Brasil. Porém, detalharemos nesta sessão detalhes que foram particulares a cada um deles.
+  
+  Para a construção dos gráficos básicos utilizamos o pacote **ggplot2** e suas funções.
+  
+  As animações foram feitas utilizando o pacote **gganimate**. As animações criadas foram as seguintes:
+  
+1. Gráfico de corrida de barras para o total de casos confirmados ao longo do tempo;
 
+2. Série de novos casos ao longo do tempo;
+
+  Para a primeira, foi preciso pensar em uma forma de apresentar os resultados de maneira que o gráfico não ficasse com muitas informações e transmitisse de forma objetiva a informação desejada. Então, decidimos selecionar utilizando funções do pacote **dplyr** o top 6 dos locais (país ou estado) com o maior número de casos. Feito isso, criamos um rank a cada data desses locais, utilizamos a função *row_number()* nos dados agrupados por data. Isso foi necessário para que a cada mudança de data na animação os países ficassem ordenados de acordo ao total de casos, sendo possível visualizar facilmente a posição de cada país.
+  
+  A construção do gráfico foi feita com o uso do pacote **ggplot2** e sua estrutura. A função *transition_time* do pacote **gganimate** foi utilizada para determinar a variável de transição do gráfico e função *animate* também do mesmo pacote foi utilizada para estabelecer o número de frames e o tempo de pausa ao fim da animação.
+  
+  Para a segunda, selecionamos o top 2 dos locais com maior número de casos para acompanhar como se deu a série de número de novos casos desde o início da pandemia. A construção do gráfico e a animação seguiu a mesma ideia anterior, exceto pelo uso da função *transition_reveal* ao invés de *transition_time*.
+
+  Para a construção dos mapas a nível mundial, descreveremos resumidamente os passo executados.
+  
+  Primeiro, utilizamos a função *ne_countries* do pacote **rnaturalearth** para obter os limites do países do mundo, as funções *st_as_sf* e  *st_set_crs* foram utilizadas para converter as logitudes e latitudes em coordenadas, essas funções fazem parte do pacote *sf*. Após isso, utilizamos a função *st_nearest_feature*, a ideia é pegar o polígono mais próximo de acordo com as geometrias construídas no passo anterior. Por fim, utilizamos a função *geom_sf* para construir os mapas utilizando a estrutura do pacote **ggplot2**.
+  
+  Para verificar se a junção foi realizada de maneira correta, fizemos alguns filtros e comparações para identificar essas diferenças. Além disso, fizemos uma verificação com os dados divulgados diariamente pelo Google Notícias com os casos da China, identificamos algumas diferenças e chegamos a realizar uma pesquisa para entender quais territórios eram considerados como parte do país, neste momento percebemos até uma inconscistência na soma desses casos pelo portal.
+  
+  
 # Criação do painel

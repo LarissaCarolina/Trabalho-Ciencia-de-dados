@@ -26,6 +26,7 @@ library(tidyverse)
 library(rgeos)
 library(sf)
 library(fuzzyjoin)
+require(gganimate)
 
 
 # URLs com os dados da Johns Hopkins:
@@ -361,7 +362,149 @@ renderPlotly({
 
 # Animações e Twitter {data-navmenu="Mundo"}
 
-amanda vai inserir
+
+
+
+
+```{r include = FALSE}
+mundo_atual<-
+  mundo %>% 
+  filter(Data==max(Data))
+
+top_mundo<-mundo_atual %>%
+  top_n(6,CasosConfirmados) %>%
+  select(Country)
+
+#Filtrando a base atual pelos pa?ses selecionados anteriormente.
+top<-mundo_pais %>%
+  filter(Country %in% c(top_mundo$Country,'China',"Italy"))
+
+# Para que o gr?fico fique ordenado em cada data, precisamos criar do n?mero de casos por data:
+rank<-top %>% 
+  select(Country, Data, TotalCasos) %>% 
+  group_by(Data) %>%
+  arrange(-TotalCasos) %>%
+  mutate(rank=row_number())
+```
+
+Row {data-height=650}
+-------------------------------------
+
+###
+```{r}
+rank<-top %>% 
+  select(Country, Data, TotalCasos) %>% 
+  group_by(Data) %>%
+  arrange(-TotalCasos) %>%
+  mutate(rank=row_number())
+
+
+g_corrida <- rank %>%
+  ggplot(aes(x = -rank,y = TotalCasos, group = Country)) +
+  geom_tile(aes(y = TotalCasos / 2, height = TotalCasos, fill = Country), width = 0.9) +
+  geom_text(aes(label = Country), hjust = "right", colour = "black", fontface = "bold", nudge_y = -100000) +
+  geom_text(aes(label = TotalCasos), hjust = "left", nudge_y = 100000, colour = "grey30") +
+  coord_flip(clip="off") +
+  # gganimate
+  transition_time(Data) +
+  theme_minimal()+
+  theme(axis.text.y=element_blank(), 
+        axis.ticks.y=element_blank())+
+  ease_aes('cubic-in-out') +
+  labs(title='Rank dos paises com os seis maiores números de casos confirmados',
+       subtitle='Total de casos confirmados em {round(frame_time,0)}', x=" ", y=" ",fill = "Pa?s")
+
+
+animate(g_corrida, nframes = 300, fps = 25, end_pause = 50)
+```
+
+
+### 
+```{r}
+mundo_atual<-
+  mundo %>% 
+  filter(Data==max(Data))
+
+top_mundo<-mundo_atual %>%
+  top_n(2,CasosConfirmados) %>%
+  select(Country)
+
+#Filtrando a base atual pelos pa?ses selecionados anteriormente.
+top<-mundo_pais %>%
+  filter(Country %in% c(top_mundo$Country))
+
+g_linha_novos_casos<-ggplot(top,aes(y=NovosCasos, col= Country,x=Data))+
+  geom_line()+
+  geom_point() +
+  transition_reveal(Data)+
+  theme_minimal()+
+  view_follow(fixed_x = T)+
+  labs(title='Novos casos',
+       x="Data ", y=" ",col = "País")
+animate(g_linha_novos_casos, nframes = 300, fps = 25, end_pause = 50)
+```
+
+
+```{r include=FALSE}
+library(twitteR)
+library(wordcloud2)
+library(stringr)
+
+akey<-'SNjqQpunmVROj78bpSrbXaY42'
+asecret<-'JPA5NePjI1wchJ5tTA7S94LEskmuMWb8bCIJBQa4ozECcze8x6'
+atoken<-'588512062-cnhAyXUANA71u9isu5Smr490l4e8ebOb5eePpDBQ'
+atokenSecret<-'HKEsqOh6Kix50iYcunURpdLJBFo8MSRU2QMKmhQDINjJ6'
+setup_twitter_oauth(akey,asecret,atoken,atokenSecret)
+1
+#pesquisar assunto ou hashtag
+p<-searchTwitter('covid19',n=1000,lang="en", resultType = 'recent')
+dfp<-twListToDF(p)
+dfp$text<-str_to_lower(dfp$text)
+
+
+lista_palavras <- strsplit(dfp$text, "\\W+")
+vetor_palavras <- unlist(lista_palavras)
+library(tm)
+library(SnowballC)
+word.corpus <- Corpus(VectorSource(vetor_palavras)) 
+
+##
+
+word.corpus<-word.corpus%>%
+  tm_map(removePunctuation)%>% ##eliminar pontuacao
+  tm_map(removeNumbers)%>% #sem numeros
+  tm_map(stripWhitespace)# sem espacos
+
+word.corpus<-word.corpus%>%
+  tm_map(tolower)%>% ##make all words lowercase
+  tm_map(removeWords, stopwords("en"))
+
+word.corpus <- tm_map(word.corpus, stemDocument)
+word.corpus <- tm_map(word.corpus, removeWords, c("https"))
+word.counts <- as.matrix(TermDocumentMatrix(word.corpus))
+word.freq2 <- sort(rowSums(word.counts), decreasing = TRUE)
+word.freq2<- rownames_to_column(as.data.frame(word.freq2))
+head(word.freq2)
+#frequencia_palavras <- table(vetor_palavras)
+#frequencia_ordenada_palavras <- sort(frequencia_palavras, decreasing=TRUE)
+library(wordcloud)
+```
+
+Row {data-height=650}
+-------------------------------------
+
+###
+```{r}
+hk =  wordcloud2(word.freq2, size = 1,color = "random-light", backgroundColor = "black")
+
+library(htmlwidgets)
+#install.packages("webshot")
+#webshot::install_phantomjs()
+#library(wordcloud2)
+#hw = wordcloud2(demoFreq,size = 3)
+saveWidget(hk,"1.html",selfcontained = F)
+webshot::webshot("1.html","1.png",vwidth = 700, vheight = 500, delay =10)
+```
 
 
 # Mapa e Gráficos {data-navmenu="Brasil"}
@@ -369,4 +512,68 @@ Ana vai inserir
 
 # Animações e Twitter {data-navmenu="Brasil"}
 
-amanda vai inserir
+
+```{r include=FALSE}
+library(twitteR)
+library(wordcloud2)
+library(stringr)
+
+akey<-'SNjqQpunmVROj78bpSrbXaY42'
+asecret<-'JPA5NePjI1wchJ5tTA7S94LEskmuMWb8bCIJBQa4ozECcze8x6'
+atoken<-'588512062-cnhAyXUANA71u9isu5Smr490l4e8ebOb5eePpDBQ'
+atokenSecret<-'HKEsqOh6Kix50iYcunURpdLJBFo8MSRU2QMKmhQDINjJ6'
+setup_twitter_oauth(akey,asecret,atoken,atokenSecret)
+1
+#pesquisar assunto ou hashtag
+p<-searchTwitter('covid19',n=1000,lang="pt", resultType = 'recent')
+dfp<-twListToDF(p)
+dfp$text<-str_to_lower(dfp$text)
+
+
+lista_palavras <- strsplit(dfp$text, "\\W+")
+vetor_palavras <- unlist(lista_palavras)
+library(tm)
+library(SnowballC)
+word.corpus <- Corpus(VectorSource(vetor_palavras)) 
+
+##
+
+word.corpus<-word.corpus%>%
+  tm_map(removePunctuation)%>% ##eliminar pontuacao
+  tm_map(removeNumbers)%>% #sem numeros
+  tm_map(stripWhitespace)# sem espacos
+
+word.corpus<-word.corpus%>%
+  tm_map(tolower)%>% ##make all words lowercase
+  tm_map(removeWords, stopwords("por"))
+
+word.corpus <- tm_map(word.corpus, stemDocument)
+word.corpus <- tm_map(word.corpus, removeWords, c("https"))
+word.counts <- as.matrix(TermDocumentMatrix(word.corpus))
+word.freq3 <- sort(rowSums(word.counts), decreasing = TRUE)
+word.freq3<- rownames_to_column(as.data.frame(word.freq3))
+head(word.freq3)
+#frequencia_palavras <- table(vetor_palavras)
+#frequencia_ordenada_palavras <- sort(frequencia_palavras, decreasing=TRUE)
+library(wordcloud)
+```
+
+
+###
+```{r}
+hw=  wordcloud2(word.freq3,  size = 0.5,color = "random-light", backgroundColor = "black")
+
+library(htmlwidgets)
+#install.packages("webshot")
+#webshot::install_phantomjs()
+#library(wordcloud2)
+hw = wordcloud2(demoFreq,size = 3)
+
+saveWidget(hw,"1.html",selfcontained = F)
+webshot::webshot("1.html","1.png",vwidth = 700, vheight = 500, delay =10)
+```
+
+
+
+
+
