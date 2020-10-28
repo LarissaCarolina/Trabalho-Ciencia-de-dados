@@ -87,9 +87,32 @@ mundo<-mundo %>% rename("Province"="Province/State")
 mundo<-mundo %>% rename("Country"="Country/Region")
 #names(mundo)
 
-# Conferindo a classe do banco e de cada uma das colunas:
-#class(mundo)
-#sapply(mundo,class)
+# Canada está com os mortos e confirmados por província, mas os recuperados não estão
+
+canada<-filter(mundo,Country=='Canada') %>% 
+  group_by(Country,Data) %>% 
+  summarise(CasosConfirmados=sum(CasosConfirmados),
+            Mortes=sum(Mortes))
+
+recuperados<-rename(recuperados,"Country"="Country/Region")
+recuperados<-rename(recuperados,"Province"="Province/State")
+cnd_mundo<- canada %>% 
+  left_join(recuperados, by=c("Country","Data"))
+
+# Reordenando as colunas
+
+cnd_mundo<- 
+  cnd_mundo %>%
+  select(Province,Country,Lat,Long,Data,CasosConfirmados,Mortes,Recuperados)
+  
+# Tirando Canada do banco 'mundo'
+
+mundo <- mundo %>% filter(Country!='Canada')
+
+# Juntando mundo com cnd_mundo
+
+mundo<- add_row(mundo,cnd_mundo)
+
 
 # É necessário converter a classe da coluna de data para date:
 require(lubridate)
@@ -127,7 +150,7 @@ for( i in names(novos)){
 }
 
 # Voltando para o formato de df:
-dados3<-cbind(plyr::ldply(novos, data.frame))
+dados3<-plyr::ldply(novos, data.frame)
 
 # Acrescentando a coluna de novos casos no banco:
 mundo_pais$NovosCasos<-dados3$X..i..
@@ -280,7 +303,7 @@ renderPlotly({
       geom_sf(data=world,fill='white')+
       geom_sf(data=mapa_g(),aes(label=Territorio,geometry=geometry,fill=Casos))+
       theme_classic()+
-      ggtitle(paste('Total de casos  no dia',input$data))
+      ggtitle(paste('Total de casos no dia',input$data))
   
     plotly::ggplotly(conf1, tooltip = c("Casos",'Territorio'))
     }else if (input$tipo_plot ==2){
@@ -311,51 +334,52 @@ renderPlotly({
 ## Graficos
 
 ```{r Dados ara gráficos}
-d<-reactive({
-  a<- dados_pais() %>% 
-    filter(Data<=input$data) %>% 
-    group_by(Data) %>% 
-    summarise(NovosMortos=sum(na.omit(NovosMortos)),
-              NovosCasos=sum(NovosCasos),
-              NovosRec=sum(na.omit(NovosRec)))
-})
+ d<-reactive({
+   a<- dados_pais() %>% 
+     filter(Data<=input$data) %>% 
+     group_by(Data) %>% 
+     summarise(NovosMortos=sum(NovosMortos),
+               NovosCasos=sum(NovosCasos),
+               NovosRec=sum(NovosRec))
+   return(a)
+ })
 ```
 
 
 ### Novos confirmados
 
 ```{r}
-renderPlotly({
-  g<- ggplot(d(),aes(x=Data,y=NovosCasos))+
-    geom_line(col='darkblue')+
-    theme_classic()
-  ggplotly(g)
-})
+ renderPlotly({
+   g<- ggplot(d(),aes(x=Data,y=NovosCasos))+
+     geom_line(col='darkblue')+
+     theme_classic()
+   ggplotly(g)
+ })
 ```
 
 
 ### Novos mortos
 
 ```{r}
-renderPlotly({
-  
-  g<- ggplot(d(),aes(x=Data,y=NovosMortos))+
-    geom_line(col='darkblue')+
-    theme_classic()
-  ggplotly(g)
-})
+ renderPlotly({
+   
+   g<- ggplot(d(),aes(x=Data,y=NovosMortos))+
+     geom_line(col='darkblue')+
+     theme_classic()
+   ggplotly(g)
+ })
 ```
 
 
 ### Novos recuperados
 
 ```{r}
-renderPlotly({
-  g<- ggplot(d(),aes(x=Data,y=NovosRec))+
-    geom_line(col='darkblue')+
-    theme_classic()
-  ggplotly(g)
-})
+ renderPlotly({
+   g<- ggplot(d(),aes(x=Data,y=NovosRec))+
+     geom_line(col='darkblue')+
+     theme_classic()
+   ggplotly(g)
+ })
 ```
 
 

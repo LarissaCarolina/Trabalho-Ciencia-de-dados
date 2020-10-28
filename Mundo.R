@@ -59,10 +59,9 @@ teste<-mundo %>%
   select("Province/State","Country/Region",Data,CasosConfirmados) %>%
   inner_join(mortes,by=c("Province/State",'Country/Region','Data')) %>%
   inner_join(recuperados,by=c("Province/State",'Country/Region','Data'))
-<<<<<<< HEAD
-=======
+
 #View(teste)
->>>>>>> c9aa0bfe1db8defed4cc903ddd9e997b47063b9d
+
 
 auxiliar<-mundo %>% 
   filter(!paste(mundo$`Province/State`,mundo$`Country/Region`,mundo$Data)%in% 
@@ -72,11 +71,8 @@ auxiliar<-mundo %>%
 
 teste<-teste %>% select("Province/State",'Country/Region',Lat=Lat.x,Long=Long.y,Data,
                         CasosConfirmados,Mortes,Recuperados)
+
 mundo <-rbind(auxiliar,teste)  
-
-# Falta so o CanadÃ¡!!!!
-
-# Gambiarra a gente aceita, sÃ³ nÃ£o aceita a derrota
 
 
 
@@ -84,6 +80,32 @@ mundo <-rbind(auxiliar,teste)
 mundo<-mundo %>% rename("Province"="Province/State")
 mundo<-mundo %>% rename("Country"="Country/Region")
 names(mundo)
+
+# Canada está com os mortos e confirmados por província, mas os recuperados não estão
+
+canada<-filter(mundo,Country=='Canada') %>% 
+  group_by(Country,Data) %>% 
+  summarise(CasosConfirmados=sum(CasosConfirmados),
+            Mortes=sum(Mortes))
+
+recuperados<-rename(recuperados,"Country"="Country/Region")
+recuperados<-rename(recuperados,"Province"="Province/State")
+cnd_mundo<- canada %>% 
+  left_join(recuperados, by=c("Country","Data"))
+
+# Reordenando as colunas
+
+cnd_mundo<- 
+  cnd_mundo %>%
+  select(Province,Country,Lat,Long,Data,CasosConfirmados,Mortes,Recuperados)
+  
+# Tirando Canada do banco 'mundo'
+
+mundo <- mundo %>% filter(Country!='Canada')
+
+# Juntando mundo com cnd_mundo
+
+mundo<- add_row(mundo,cnd_mundo)
 
 # Conferindo a classe do banco e de cada uma das colunas:
 class(mundo)
