@@ -157,36 +157,26 @@ mean(dados_brasil$obitosNovos[(nrow(dados_brasil)-14):nrow(dados_brasil)], na.rm
 ########################  Tentar fazer um mapinha do Brasil no leaflet
 
 library(rgdal)   # para carregar o shape
-library(leaflet)
-
-## Lembrar de baixar os dados site do ibge, eles est?o dentro de uma pasta chamada Mapa
-shp <- readOGR("Mapa\\.", "BR_UF_2019", stringsAsFactors=FALSE, encoding="UTF-8")
-
-Brasillastadate<- dados_estado %>% filter(data == max(data))
-brasileiropg <- merge(shp,Brasillastadate, by.x = "CD_UF", by.y = "coduf")
-proj4string(brasileiropg) <- CRS("+proj=longlat +datum=WGS84 +no_defs")
-
-Encoding(brasileiropg$NM_ESTADO) <- "UTF-8"
-
-brasileiropg$Score[is.na(brasileiropg$Score)] <- 0
+if(!require(brmap)){install.packages("brmap");library(brmap)} 
 
 
-pal <- colorBin("Blues",domain = NULL,n=5) #cores do mapa
+Brasillastadate<- dados_estado %>% 
+  filter(data == max(data)) %>%
+  left_join(brmap_estado, by = c("coduf" = "estado_cod"))%>%
+  as_tibble()
 
-state_popup <- paste0("<strong>Estado: </strong>", 
-                      brasileiropg$estado, 
-                      "<br><strong>Casos: </strong>", 
-                      brasileiropg$casosAcumulado)
-leaflet(data = brasileiropg) %>%
-  addProviderTiles("CartoDB.Positron") %>%
-  addPolygons(fillColor = ~pal(brasileiropg$casosAcumulado), 
-              fillOpacity = 0.8, 
-              color = "#BDBDC3", 
-              weight = 1, 
-              popup = state_popup) %>%
-  addLegend("bottomright", pal = pal, values = ~brasileiropg$casosAcumulado,
-            title = "Total de casos",
-            opacity = 1)
+
+d<- ggplot() + 
+  geom_sf(data =Brasillastadate ,aes(geometry=geometry,fill= casosAcumulado, label=estado))+
+  theme(
+    panel.background = element_blank(), 
+    panel.grid.major = element_line(color = "transparent"), 
+    axis.text = element_blank(), 
+    axis.ticks = element_blank(),
+    plot.title = element_text(hjust = 0.5) ## hjus = 0.5 centraliza o título
+  )
+
+plotly::ggplotly(d, tooltip = c('estado',"casosAcumulado"))
 
 
 
@@ -239,7 +229,7 @@ head(word.freq)
 #frequencia_palavras <- table(vetor_palavras)
 #frequencia_ordenada_palavras <- sort(frequencia_palavras, decreasing=TRUE)
 
-wordcloud2(word.freq, size=0.8)
+wordcloud2(word.freq, size=0.5,color = "random-light", backgroundColor = "black")
 
 
 #---------------------- Animações---------------------
