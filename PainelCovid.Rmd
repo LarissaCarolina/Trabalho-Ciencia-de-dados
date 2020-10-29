@@ -420,11 +420,6 @@ renderValueBox(valueBox(sum(dados_cartao()$Mortes)))
 renderValueBox(valueBox(sum(dados_cartao()$Recuperados)))
 ```
 
-### c2
-
-```{r}
-renderValueBox(valueBox(899999,'Número de casos'))
-```
 
 ## Mapa
 
@@ -461,8 +456,7 @@ renderPlotly({
       geom_sf(data=mapa_g(),aes(label=Territorio,geometry=geometry,fill=Casos))+
       theme_classic()+
       ggtitle(paste('Total de casos até o dia',input$data))
-  
-    plotly::ggplotly(conf1, tooltip = c("Casos",'Territorio'))
+      plotly::ggplotly(conf1, tooltip = c("Casos",'Territorio'))
     }else if (input$tipo_plot ==2){
       conf1<-ggplot()+
         geom_sf(data=world,fill='white')+
