@@ -34,59 +34,7 @@ output:
 \newpage
 
 
-# Reuniões 
 
-(Tirar para versão final)
-
-## Reunião 22/08
-
-Nosso produto final será um painel usando shiny.
-
-Faremos mapas, cartões com os números de mortos, novos casos, etc...
-
-Para próxima reunião: 
-
-- Estudar o shiny.
-
-
-## Reunião 12/09
-
-Encontramos o flexdashboard. É um pacote onde utilizamos o Rmarkdown para criar paineis. É possível integrar com o shiny.  
-
-
-A ideia inicial é ter 3 abas no painel:
-
-1. Visão do mundo
-
-2. Visão do Brasil
-
-3. Visão de Minas
-
-4. Se der tempo uma aba com o detalhamento de BH
-
-### Ideias para tentativas
-
-- Nuvem de palavras (pacote wordcloud2) com tweets sobre a covid (Pacote que Ana e Natalia usaram na disciplina de Pacotes Estatísticos : twitteR)
-
-- Gráfico de corrida de barras 
-
-### Tarefa:
-
-Tentar automatizar a extração dos dados do portal do ministério da saúde.
-
-## Reunião 26/09
-
-- Não será mais necessário extrair os dados diretamente do portal do ministério da saúde. Podemos pegar do Rafael.
-
-- 
-
-### Tarefa:
-
-- Ver se é possível automatizar a atualização do painel. 
-
-- Organizar os nossos scripts para subir para o github
-
-\newpage
 
 # Introdução
   Atualmente, estamos vivendo um surto de uma doença infecciosa chamada Covid-19 que é causada pelo novo coronavírus (Sars-Cov-2). A doença foi identificada pela primeira vez em Wuhan, na província de Hubei, República Popular da China.
@@ -95,7 +43,7 @@ Tentar automatizar a extração dos dados do portal do ministério da saúde.
 
   Apesar do mundo inteiro viver sob estado de alerta por essa doença, os países a enfrentam com  diferentes intensidades. Muitas razões podem ser atribuídas para esse fato, por exemplo os recursos que o países detêm para investimento em infraestura para o combate à doença, posicionamento dos governantes no sentido de fornecer à população condições para se protegerem, até mesmo a  postura da população em relação ao cumprimento das medidas de segurança, entre outros.
 
-  A partir deste trabalho iremos fornecer uma visão sobre o panorama da doença atualmente. O produto final será um painel desenvolvido em shiny que trará análises descritivas visuais e métricas de interesse sobre o momento atual da pandemia no mundo e no Brasil.
+  A partir deste trabalho iremos fornecer uma visão sobre o panorama da doença atualmente. O produto final será um painél desenvolvido em shiny que trará análises descritivas visuais e métricas de interesse sobre o momento atual da pandemia no mundo e no Brasil.
 
   A fonte utilizada para a busca dos dados em nível mundial foi o repositório de dados sobre a Covid-19 administrado pela universidade Johns Hopkins (EUA), já para buscar dados em nível Brasil utilizamos o portal Coronavirus-Brasil gerenciado pelo Ministério da Saúde.
 
@@ -123,6 +71,7 @@ Tentar automatizar a extração dos dados do portal do ministério da saúde.
 Descrever o proceso de manipulação dos dados.
 
 # Criação das visualizações
+
   As visualizações construídas foram as mesmas tanto para os dados do Mundo quanto para os dados do Brasil. Porém, detalharemos nesta sessão detalhes que foram particulares a cada um deles.
   
   Para a construção dos gráficos básicos utilizamos o pacote **ggplot2** e suas funções.
@@ -147,3 +96,82 @@ Descrever o proceso de manipulação dos dados.
   
   
 # Criação do painel
+
+
+
+# Apêncice
+
+## Crorograma do grupo
+
+Iremos resumir aqui como nos organizamos ao longo do semestre para a exeucução do trabalho. De maneira geral, marcamos algumas reuniões com todas as integrantes do grupo e nelas decidimos quais seriam os próximos passos.
+
+A seguir apresentaremos algumas notas importantes que fizemos em cada uma dessas reuniões.
+
+### Reunião 22/08
+
+Nosso produto final será um painel usando shiny.
+
+Faremos mapas, cartões com os números de mortos, novos casos, etc...
+
+Para próxima reunião: 
+
+- Estudar o shiny.
+
+
+### Reunião 12/09
+
+Encontramos o flexdashboard. É um pacote onde utilizamos o Rmarkdown para criar paineis. É possível integrar com o shiny.  
+
+
+A ideia inicial é ter 3 abas no painel:
+
+1. Visão do mundo
+
+2. Visão do Brasil
+
+3. Visão de Minas
+
+4. Se der tempo uma aba com o detalhamento de BH
+
+**Ideias para tentativas**
+
+- Nuvem de palavras (pacote wordcloud2) com tweets sobre a covid (Pacote que Ana e Natalia usaram na disciplina de Pacotes Estatísticos : twitteR)
+
+- Gráfico de corrida de barras 
+
+**Tarefa:**
+
+Tentar automatizar a extração dos dados do portal do ministério da saúde.
+
+### Reunião 26/09
+
+- Não será mais necessário extrair os dados diretamente do portal do ministério da saúde. Podemos pegar do Rafael.
+
+- 
+
+**Tarefa:**
+
+- Ver se é possível automatizar a atualização do painel. 
+
+- Organizar os nossos scripts para subir para o github
+
+## Atribuição de tarefas do grupo
+
+Listaremos aqui um resumo de como funcionou a divisão de tarefas entre as integrantes do grupo.
+
+1. Manipulação de dados (Mundo) : Letícia Canhestro e Larissa Carolina;
+
+2. Manipulação de dados (Brasil) : Ana Clara, Amanda Xavier e Natália Caroline;
+
+3. Visualizações
+
+    - Métricas dos cartões: Natália Caroline;
+    
+    - Animações (Mundo e Brasil): Larissa Carolina;
+    
+    - Mapa (Brasil e Mundo): Amanda Xavier e Larissa Carolina; 
+
+4. Montagem do painél: Ana Clara, Amanda Xavier e Letícia Canhestro;
+
+5. Construção do relatório: Ana Clara, Amanda Xavier, Larissa Carolina, Letícia Canhestro e Natália Oliveira;
+
