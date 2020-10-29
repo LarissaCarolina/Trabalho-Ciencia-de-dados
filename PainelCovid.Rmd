@@ -519,86 +519,14 @@ renderPlotly({
 # Animações e Twitter {data-navmenu="Mundo"}
 
 
-
-
-
-```{r include = FALSE}
-mundo_atual<-
-  mundo %>% 
-  filter(Data==max(Data))
-
-top_mundo<-mundo_atual %>%
-  top_n(6,CasosConfirmados) %>%
-  select(Country)
-
-#Filtrando a base atual pelos pa?ses selecionados anteriormente.
-top<-mundo_pais %>%
-  filter(Country %in% c(top_mundo$Country,'China',"Italy"))
-
-# Para que o gr?fico fique ordenado em cada data, precisamos criar do n?mero de casos por data:
-rank<-top %>% 
-  select(Country, Data, TotalCasos) %>% 
-  group_by(Data) %>%
-  arrange(-TotalCasos) %>%
-  mutate(rank=row_number())
-```
-
 Row {data-height=650}
 -------------------------------------
 
 ###
-```{r}
- rank<-top %>% 
-   select(Country, Data, TotalCasos) %>% 
-   group_by(Data) %>%
-   arrange(-TotalCasos) %>%
-   mutate(rank=row_number())
- 
- 
- g_corrida <- rank %>%
-   ggplot(aes(x = -rank,y = TotalCasos, group = Country)) +
-   geom_tile(aes(y = TotalCasos / 2, height = TotalCasos, fill = Country), width = 0.9) +
-   geom_text(aes(label = Country), hjust = "right", colour = "black", fontface = "bold", nudge_y = -100000) +
-   geom_text(aes(label = TotalCasos), hjust = "left", nudge_y = 100000, colour = "grey30") +
-   coord_flip(clip="off") +
-   # gganimate
-   transition_time(Data) +
-   theme_minimal()+
-   theme(axis.text.y=element_blank(), 
-         axis.ticks.y=element_blank())+
-   ease_aes('cubic-in-out') +
-   labs(title='Rank dos paises com os seis maiores números de casos confirmados',
-        subtitle='Total de casos confirmados em {round(frame_time,0)}', x=" ", y=" ",fill = "Pa?s")
- 
- 
- animate(g_corrida, nframes = 300, fps = 25, end_pause = 50)
-```
-
+![](corrida.gif)
 
 ### 
-```{r}
- mundo_atual<-
-   mundo %>% 
-   filter(Data==max(Data))
- 
- top_mundo<-mundo_atual %>%
-   top_n(2,CasosConfirmados) %>%
-   select(Country)
- 
- #Filtrando a base atual pelos pa?ses selecionados anteriormente.
- top<-mundo_pais %>%
-   filter(Country %in% c(top_mundo$Country))
- 
- g_linha_novos_casos<-ggplot(top,aes(y=NovosCasos, col= Country,x=Data))+
-   geom_line()+
-   geom_point() +
-   transition_reveal(Data)+
-   theme_minimal()+
-   view_follow(fixed_x = T)+
-   labs(title='Novos casos',
-        x="Data ", y=" ",col = "País")
- animate(g_linha_novos_casos, nframes = 300, fps = 25, end_pause = 50)
-```
+![](linhanovos.gif)
 
 
 ```{r include=FALSE}
@@ -651,15 +579,15 @@ Row {data-height=650}
 
 ###
 ```{r}
- hk =  wordcloud2(word.freq2, size = 1,color = "random-light", backgroundColor = "black")
+  wordcloud2(word.freq2, size = 1,color = "random-light", backgroundColor = "black")
  
  library(htmlwidgets)
  #install.packages("webshot")
  #webshot::install_phantomjs()
  #library(wordcloud2)
  #hw = wordcloud2(demoFreq,size = 3)
- saveWidget(hk,"1.html",selfcontained = F)
- webshot::webshot("1.html","1.png",vwidth = 700, vheight = 500, delay =10)
+ #saveWidget(hk,"1.html",selfcontained = F)
+ #webshot::webshot("1.html","1.png",vwidth = 700, vheight = 500, delay =10)
 ```
 
 
@@ -669,7 +597,7 @@ Row {data-height=650}
 
 ```{r}
 inputPanel(
-  selectInput('tipo_plot',label=h4('Selecione uma informação para o mapa'), choices = list('Total de casos confirmados'=1,'Total de mortos'=2),selected = 1)
+  selectInput('tipo_plot2',label=h4('Selecione uma informação para o mapa'), choices = list('Total de casos confirmados'=1,'Total de mortos'=2),selected = 1)
   )
 
 inputPanel(
@@ -677,7 +605,7 @@ inputPanel(
   )
 
 inputPanel(
-  dateInput('data',label=h4('Selecione uma data'),value = max(dados_estado$data),max =max(dados_estado$data), min =min(dados_estado$data))
+  dateInput('data2',label=h4('Selecione uma data'),value = max(dados_estado$data),max =max(dados_estado$data), min =min(dados_estado$data))
   )
 
 ```
@@ -686,20 +614,20 @@ inputPanel(
 ```{r Fazendo os bancos reativos - Brasil}
 dados_data_mapa <- reactive({
   dados_mapa %>%
-  filter(data == input$data) %>%
+  filter(data == input$data2) %>%
   as.tibble()
 })
 
 dados_data_estado <- reactive({
   if(input$estado =='Todos'){
     dados_estado%>%
-      filter(data<=input$data)%>%
+      filter(data<=input$data2)%>%
       group_by(data) %>% 
       summarise(NovosMortos=sum(obitosNovos),
              NovosCasos=sum(casosNovos))
     } else {
    dados_estado %>% 
-     filter(estado==input$estado&data<=input$data)%>%
+     filter(estado==input$estado&data<=input$data2)%>%
      group_by(data) %>% 
      summarise(NovosMortos=sum(obitosNovos),
                NovosCasos=sum(casosNovos))
@@ -747,21 +675,15 @@ library(plotly)
 
 renderPlotly({
     
-    if (input$tipo_plot == 1){
+    if (input$tipo_plot2 == 1){
     conf1<-ggplot() + 
     geom_sf(data=dados_data_mapa(),aes(geometry=geometry, fill= casosAcumulado, label=estado))+
-    theme(
-    panel.background = element_blank(), 
-    panel.grid.major = element_line(color = "transparent"), 
-    axis.text = element_blank(), 
-    axis.ticks = element_blank(),
-    plot.title = element_text(hjust = 0.5) ## hjus = 0.5 centraliza o título
-  )+
-    ggtitle(paste('Total de casos até o dia',input$data))
+    theme_classic()+
+    ggtitle(paste('Total de casos até o dia',input$data2))
     
     plotly::ggplotly(conf1, tooltip = c("Casos",'Estado'))
     
-    }else if (input$tipo_plot == 2){
+    }else if (input$tipo_plot2 == 2){
       conf1<-ggplot() + 
     geom_sf(data=dados_data_mapa(),aes(geometry=geometry, fill= obitosAcumulado, label=estado))+
     theme(
@@ -771,7 +693,7 @@ renderPlotly({
     axis.ticks = element_blank(),
     plot.title = element_text(hjust = 0.5) ## hjus = 0.5 centraliza o título
   )+
-    ggtitle(paste('Total de mortes até o dia',input$data))
+    ggtitle(paste('Total de mortes até o dia',input$data2))
       
     plotly::ggplotly(conf1, tooltip = c("Mortes",'Estado'))
     }
@@ -809,6 +731,14 @@ renderPlotly({
 
 
 # Animações e Twitter {data-navmenu="Brasil"}
+
+Row {data-height=650}
+-------------------------------------
+###
+![](corridabrasil.gif)
+
+###
+![](linhabrasil.gif)
 
 
 ```{r include=FALSE}
@@ -856,19 +786,21 @@ renderPlotly({
  library(wordcloud)
 ```
 
+Row {data-height=650}
+-------------------------------------
 
 ###
 ```{r}
- hw=  wordcloud2(word.freq3,  size = 0.5,color = "random-light", backgroundColor = "black")
+ hw = wordcloud2(word.freq3,  size = 1,color = "random-light", backgroundColor = "black")
  
  library(htmlwidgets)
  #install.packages("webshot")
  #webshot::install_phantomjs()
  #library(wordcloud2)
- hw = wordcloud2(demoFreq,size = 3)
+ #wordcloud2(word.freq3,size = 0.5)
  
- saveWidget(hw,"1.html",selfcontained = F)
- webshot::webshot("1.html","1.png",vwidth = 700, vheight = 500, delay =10)
+saveWidget(hw,"1.html",selfcontained = F)
+webshot::webshot("1.html","1.png",vwidth = 700, vheight = 500, delay =10)
 ```
 
 
