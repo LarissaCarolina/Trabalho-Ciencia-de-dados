@@ -202,7 +202,7 @@ atokenSecret<-'HKEsqOh6Kix50iYcunURpdLJBFo8MSRU2QMKmhQDINjJ6'
 setup_twitter_oauth(akey,asecret,atoken,atokenSecret)
 1
 #pesquisar assunto ou hashtag
-p<-searchTwitter('covid19',n=100,lang="pt", resultType = 'recent') ## locale ou geocode
+p<-searchTwitter('covid19',n=1000,lang="pt", resultType = 'recent') ## locale ou geocode
 dfp<-twListToDF(p)
 dfp$text<-str_to_lower(dfp$text)
 
@@ -275,8 +275,8 @@ g_corrida <- rank %>%
   ease_aes('cubic-in-out') +
   labs(title='Estados com os seis maiores números de casos confirmados atualmente',
        subtitle='Total de casos confirmados em {round(frame_time,0)}', x=" ", y=" ",fill = "Estado (UF)")
-animate(g_corrida, nframes = 200, fps = 25, end_pause = 50)
-
+corridabrasil<- animate(g_corrida, nframes = 200, fps = 25, end_pause = 50)
+anim_save("corridabrasil.gif", corridabrasil)
 
 ## Animação: Novos Casos
 #Acho que o gráfico com mais de duas localidades fica muito poluído, vou fixar um top 2.
@@ -300,4 +300,5 @@ g_linha_novos_casos<-ggplot(top,aes(y=casosNovos, col= estado,x=data))+
   view_follow(fixed_x = T)+
   labs(title='Número de novos casos',
         x=" ", y=" ",col = "Estado (UF)")
-animate(g_linha_novos_casos, nframes = 300, fps = 25, end_pause = 50)
+linhabrasil<- animate(g_linha_novos_casos, nframes = 300, fps = 25, end_pause = 50)
+anim_save("linhabrasil.gif", linhabrasil)
