@@ -384,14 +384,21 @@ dados_cartao<-reactive({
 dias_caso1<-reactive({
   if(input$pais =='Todos'){
   b<- mundo %>% 
-  filter(Data<=input$data)} else {
+  filter(Data<=input$data)
+  data_inicial<- '2019-12-08'
+  }else if (input$pais =='China') {
   b<- mundo %>% 
   filter(Data<=input$data,Country==input$pais)
-    }
-  
-  
+  data_inicial<- '2019-12-08'  #https://coronavirus.saude.gov.br/linha-do-tempo/#dez2019
+  }else  {
+  b<- mundo %>% 
+  filter(Data<=input$data,Country==input$pais)
   a<- b %>% filter(CasosConfirmados!=0)
-  return((min(a$Data)%--%max(a$Data))/ddays(1))
+  data_inicial<- min(a$Data)
+  }
+  
+  
+  return((data_inicial%--%max(a$Data))/ddays(1))
 })
 ```
 
