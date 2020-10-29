@@ -385,10 +385,12 @@ dias_caso1<-reactive({
   if(input$pais =='Todos'){
   b<- mundo %>% 
   filter(Data<=input$data)
-  data_inicial<- '2019-12-08'
+  a<- b %>% filter(CasosConfirmados!=0)
+  data_inicial<- as_date('2019-12-08')
   }else if (input$pais =='China') {
   b<- mundo %>% 
   filter(Data<=input$data,Country==input$pais)
+  a<- b %>% filter(CasosConfirmados!=0)
   data_inicial<- '2019-12-08'  #https://coronavirus.saude.gov.br/linha-do-tempo/#dez2019
   }else  {
   b<- mundo %>% 
