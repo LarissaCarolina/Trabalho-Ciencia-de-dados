@@ -9,14 +9,17 @@ rm(list=ls(all=TRUE))
 #########################
 #  Carregando pacotes   #
 #########################
-require(tidyr)
-require(tidyverse)
-require(data.table)
-require(lubridate)
-require(gganimate)
+library(dplyr)
+library(tidyr)
+library(tidyverse)
+library(data.table)
+library(lubridate)
+library(gganimate)
 library(rio)
 library(httr)
 library(jsonlite)
+library(rgdal)  
+library(brmap)  
 #########################
 
 #### Brasil ####
@@ -26,12 +29,12 @@ library(jsonlite)
 ###################################
 # url para baixar os dados:
 url <-  "https://xx9p7hp1p7.execute-api.us-east-1.amazonaws.com/prod/PortalGeral"
-covid <- GET(url, 
+covid <- httr::GET(url, 
              add_headers("x-parse-application-id" = "unAFkcaNDeXajurGB7LChj8SgQYS2ptm"))
 
 # Resultado:
 results <- covid %>% 
-  content()
+  httr::content()
 
 #results
 
@@ -178,6 +181,7 @@ d<- ggplot() +
 
 plotly::ggplotly(d, tooltip = c('estado',"casosAcumulado"))
 
+class(dados_estado)
 
 
 ############ Agora um mapinha animado
