@@ -10,7 +10,7 @@ library(data.table)
 library(tidyverse)
 library(rgeos)
 library(sf)
-library(fuzzyjoin)
+#library(fuzzyjoin)
 
 
 # URLs com os dados da Johns Hopkins:

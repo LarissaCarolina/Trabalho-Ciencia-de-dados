@@ -20,12 +20,12 @@ library(flexdashboard)
 #Carregando os pacotes necessários:
 library(rnaturalearth)
 library(rnaturalearthdata)
-library(rnaturalearthhires)
+#library(rnaturalearthhires)
 library(data.table)
 library(tidyverse)
 library(rgeos)
 library(sf)
-library(fuzzyjoin)
+#library(fuzzyjoin)
 require(gganimate)
 
 
@@ -367,32 +367,57 @@ dados_pais<- reactive({
     } 
 })
 
+dados_cartao<-reactive({
+  if(input$pais =='Todos'){
+    dados_data()} else {
+      
+   dados_data() %>% 
+  filter(Country==input$pais)
+    } 
+})
+
 ```
 
 ## Cartoes
 
-### c1
+```{r casos d1}
+dias_caso1<-reactive({
+  if(input$pais =='Todos'){
+  b<- mundo %>% 
+  filter(Data<=input$data)} else {
+  b<- mundo %>% 
+  filter(Data<=input$data,Country==input$pais)
+    }
+  
+  
+  a<- b %>% filter(CasosConfirmados!=0)
+  return((min(a$Data)%--%max(a$Data))/ddays(1))
+})
+```
+
+
+### Dias desde o 1º caso
 ```{r}
-renderValueBox(valueBox('2020-xx-xx','Data caso'))
+renderValueBox(valueBox(dias_caso1()))
 
 ```
 
-### c2
+### Total de casos
 
 ```{r}
-renderValueBox(valueBox(899999,'Número de casos'))
+renderValueBox(valueBox(sum(dados_cartao()$CasosConfirmados)))
 ```
 
-### c2
+### Total de mortes
 
 ```{r}
-renderValueBox(valueBox(899999,'Número de casos'))
+renderValueBox(valueBox(sum(dados_cartao()$Mortes)))
 ```
 
-### c2
+### Total de recuperados
 
 ```{r}
-renderValueBox(valueBox(899999,'Número de casos'))
+renderValueBox(valueBox(sum(dados_cartao()$Recuperados)))
 ```
 
 ### c2
@@ -435,7 +460,7 @@ renderPlotly({
       geom_sf(data=world,fill='white')+
       geom_sf(data=mapa_g(),aes(label=Territorio,geometry=geometry,fill=Casos))+
       theme_classic()+
-      ggtitle(paste('Total de casos no dia',input$data))
+      ggtitle(paste('Total de casos até o dia',input$data))
   
     plotly::ggplotly(conf1, tooltip = c("Casos",'Territorio'))
     }else if (input$tipo_plot ==2){
@@ -443,7 +468,7 @@ renderPlotly({
         geom_sf(data=world,fill='white')+
         geom_sf(data=mapa_g(),aes(label=Territorio,geometry=geometry,fill=Mortes))+
         theme_classic()+
-        ggtitle(paste('Total de mortos no dia',input$data))
+        ggtitle(paste('Total de mortos até o dia',input$data))
   
       plotly::ggplotly(conf1, tooltip = c("Mortes",'Territorio'))
     }else if (input$tipo_plot ==3){
@@ -451,7 +476,7 @@ renderPlotly({
         geom_sf(data=world,fill='white')+
         geom_sf(data=mapa_g(),aes(label=Territorio,geometry=geometry,fill=Recuperados))+
         theme_classic()+
-        ggtitle(paste('Total de recuperados no dia',input$data))
+        ggtitle(paste('Total de recuperados até o dia',input$data))
   
       plotly::ggplotly(conf1, tooltip = c("Recuperados",'Territorio'))
     }
