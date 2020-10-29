@@ -95,7 +95,7 @@ Tentar automatizar a extração dos dados do portal do ministério da saúde.
 
   Apesar do mundo inteiro viver sob estado de alerta por essa doença, os países a enfrentam com  diferentes intensidades. Muitas razões podem ser atribuídas para esse fato, por exemplo os recursos que o países detêm para investimento em infraestura para o combate à doença, posicionamento dos governantes no sentido de fornecer à população condições para se protegerem, até mesmo a  postura da população em relação ao cumprimento das medidas de segurança, entre outros.
 
-  A partir deste trabalho iremos fornecer uma visão sobre o panorama da doença atualmente. O produto final será um painél desenvolvido em shiny que trará análises descritivas visuais e métricas de interesse sobre o momento atual da pandemia no mundo e no Brasil.
+  A partir deste trabalho iremos fornecer uma visão sobre o panorama da doença atualmente. O produto final será um painel desenvolvido em shiny que trará análises descritivas visuais e métricas de interesse sobre o momento atual da pandemia no mundo e no Brasil.
 
   A fonte utilizada para a busca dos dados em nível mundial foi o repositório de dados sobre a Covid-19 administrado pela universidade Johns Hopkins (EUA), já para buscar dados em nível Brasil utilizamos o portal Coronavirus-Brasil gerenciado pelo Ministério da Saúde.
 
@@ -121,6 +121,7 @@ Tentar automatizar a extração dos dados do portal do ministério da saúde.
    
 ## Dados do Brasil
 Descrever o proceso de manipulação dos dados.
+
 # Criação das visualizações
   As visualizações construídas foram as mesmas tanto para os dados do Mundo quanto para os dados do Brasil. Porém, detalharemos nesta sessão detalhes que foram particulares a cada um deles.
   

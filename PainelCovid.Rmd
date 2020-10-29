@@ -464,8 +464,14 @@ renderPlotly({
       geom_sf(data=world,fill='white')+
       geom_sf(data=mapa_g(),aes(label=Territorio,geometry=geometry,fill=Casos))+
       theme_classic()+
+
+      ggtitle(paste('Total de casos no dia',input$data))
+  
+    plotly::ggplotly(conf1, tooltip = c("Casos",'Territorio'))
+
       ggtitle(paste('Total de casos até o dia',input$data))
       plotly::ggplotly(conf1, tooltip = c("Casos",'Territorio'))
+
     }else if (input$tipo_plot ==2){
       conf1<-ggplot()+
         geom_sf(data=world,fill='white')+
@@ -494,6 +500,7 @@ renderPlotly({
 ## Graficos
 
 ```{r Dados para gráficos - Mundo}
+
  d<-reactive({
    a<- dados_pais() %>% 
      filter(Data<=input$data) %>% 
@@ -661,39 +668,59 @@ dados_data_estado <- reactive({
                NovosCasos=sum(casosNovos))
  } 
 }) 
+
+dados_cartao_brasil<-reactive({
+  if(input$estado =='Todos'){
+    dados_estado%>%
+      filter(data==input$data2)
+
+    } else {
+    dados_estado %>% 
+     filter(estado==input$estado&data==input$data2)
+    } 
+})
 ```
 
 ## Cartoes
 
-### c1
+```{r casos}
+dias_1caso<-reactive({
+  if(input$estado =='Todos'){
+  b<- dados_estado %>% 
+  filter(data<=input$data2)
+  a<- b %>% filter(casosAcumulado!=0)
+  data_inicial<- min(a$data)
+  } else  {
+  b<- dados_estado %>% 
+  filter(data<=input$data2,estado==input$estado)
+  a<- b %>% filter(casosAcumulado!=0)
+  data_inicial<- min(a$data)
+  }
+  
+  
+  return((data_inicial%--%max(a$data))/ddays(1))
+})
+```
+
+
+### Dias desde o 1º caso
 ```{r}
-renderValueBox(valueBox('2020-xx-xx','Data caso'))
+renderValueBox(valueBox(dias_1caso()))
 
 ```
 
-### c2
+### Total de casos
 
 ```{r}
-renderValueBox(valueBox(899999,'Número de casos'))
+renderValueBox(valueBox(sum(dados_cartao_brasil()$casosAcumulado)))
 ```
 
-### c2
+### Total de mortes
 
 ```{r}
-renderValueBox(valueBox(899999,'Número de casos'))
+renderValueBox(valueBox(sum(dados_cartao_brasil()$obitosAcumulado)))
 ```
 
-### c2
-
-```{r}
-renderValueBox(valueBox(899999,'Número de casos'))
-```
-
-### c2
-
-```{r}
-renderValueBox(valueBox(899999,'Número de casos'))
-```
 
 ## Mapa
 
