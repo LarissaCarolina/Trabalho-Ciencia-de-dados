@@ -30,6 +30,7 @@ output:
 
 
 \newpage
+\setcounter{tocdepth}{2}
 \tableofcontents
 \newpage
 
@@ -47,27 +48,23 @@ output:
 
   A fonte utilizada para a busca dos dados em nível mundial foi o repositório de dados sobre a Covid-19 administrado pela universidade Johns Hopkins (EUA), já para buscar dados em nível Brasil utilizamos o portal Coronavirus-Brasil gerenciado pelo Ministério da Saúde.
 
+\newpage
 
 # Manipulação dos dados
  Uma vez utilizadas fontes de dados diferentes, o processo de manipulação dos dados também ocorreu de maneira distinta nos dados referentes ao mundo e ao Brasil. Iremos detalhar a seguir cada um deles. Nesta etapa, as integrantes encarregadas deste tratamento foram Larissa Carolina e Letícia Canhestro nos dados do mundo e Ana Clara, Amanda Xavier e Natália Oliveira nos dados do Brasil.
  
 ## Dados do Mundo
-   Como dito anteriormente, a fonte de dados utilizada para essa etapa foi o repositório da Universidade Johns Hopkins (EUA). A estrutura dos dados seguia um formato não muito adequado para a análise, sendo nessário um tempo considerável de trabalho no tratamento dos mesmos.
-   
-   A leitura dos dados foi feita utilizando a função *read_csv* do pacote ***readr*, como argumento utilizamos a url que já vínhamos utilizando durante as aulas práticas para trabalhar com esses dados.
-   
-   Primeiramente, os dados estavam divididos em três bases diferentes, uma para os registros de casos confirmados, outra para as mortes, por fim uma base dedicada a registros de número de recuperados. Além disso, os dados estavem dispostos de maneira que cada país + província formava uma única linha no banco e cada data era acrescentada em formato de coluna.
-   
-  
-   Dessa forma, foi necessário primeiro alterar o formato de cada uma das bases, passando essas para o formato 'arrumado' (*tidy*), neste cada variável é uma coluna e as linhas são os valores observados para as mesmas. Isso foi feito utilizando a função *pivot_longer* do pacote **tidyverse**.
-   
+   Uma vez utilizadas fontes de dados diferentes, o processo de manipulação dos dados também ocorreu de maneira distinta nos dados referentes ao mundo e ao Brasil. Iremos detalhar a seguir cada um deles. Nesta etapa, as integrantes encarregadas deste tratamento foram Larissa Carolina e Letícia Canhestro nos dados do mundo e Ana Clara, Amanda Xavier e Natália Oliveira nos dados do Brasil.
+
    Feito isso, precisamos juntar as três bases de maneira a obter uma única tabela com as informações desejadas. Isso foi feito utilizando a função de junção *left_join*, os atributos utilizados como chaves foram *Province/State*, *Country/Region*, *Lat* e *Long* que são comuns às três bases. Neste ponto, percebemos que algumas localidades estavam com informações diferentes nas três bases, para solucionar tal problema identificamos quais eram essas localidas e a tratamos de maneira diferenciada utilizando um data.frame auxiliar, por fim fizemos a união dos dados que se uniram certo aos que precisaram ser tratados separadamente.
-   
+
+   Ao juntar as bases, houve casos em que as informações dos três bancos estavam diferente.O Canadá, por exemplo, tem seus dados registrados no banco de confirmados e mortes por província, já no banco de recuperados a informação vem de forma única para o país. Assim, necessitamos unir os dados dos países em que os dados de mortes e/ou recuperados estavam sendo perdidas de forma separada e depois uní-los ao banco.
+
    Após isso, outras manipulações básicas foram feitas como por exemplo verificação da classe das colunas, adequação do tipo delas ao desejado (Ex.: Transformação da coluna de data para o formato date, isso foi feito utilizando a função *mdy* do pacote **lubridate**).
-   
+
    Algo importante que nos demandou um cuidado especial no tratamento desses dados foi o fato de não existir a coluna que nos trouxesse as informações de novos casos, novos óbitos e novos recuperados. Pensamos em utilizar a função *diff* de maneira direta nos dados para obter essas informações. Porém, ao tentarmos percebemos que a informação do primerio registro não era retornada isso gerava inconsistência nos dados. Fizemos um outro teste utilizando uma manipulação com a função *lag* com o lag de um passo. Neste caso, o primeiro registro era retornado, porém com dado ausente, já que não havia valor disponível a ser subtraído do primeiro registro. Por fim, fizemos uma manipulação que utilizava a função *diff*, mas que agregava o primeiro valor de casos ao primeiro registro da coluna de novos (casos, óbitos ou recuperados) para cada país.
-   
-   Um outra etapa para a conclusão desse processo de manipulação dos dados foi necessário para a construção dos visuais de mapa. Para essa etapa, como estamos interessados em vizualizar de maneira espacial o comportamento das métricas de interesse, achamos mais adequado não agrupar os territórios afastado ao seu país "dono". Aqui, utilizamos funções de manipulação de textos como a  *rm_acent* do pacote **abjutils** e outras funções como *str_replace* do pacote **stringr**.
+
+   Um outra etapa para a conclusão desse processo de manipulação dos dados foi necessário para a construção dos visuais de mapa. Para essa etapa, como estamos interessados em visualizar de maneira espacial o comportamento das métricas de interesse, achamos mais adequado não agrupar os territórios afastado ao seu país "dono". A união entre a base de dados da pandemia com a base que contem a geometria dos países foi feita pela latitude e longitude. Utilizamos a função *st_nearest_feature* do pacote **sf**.Ela vefifica a geometria mais próxima do ponto dado pela latitude e longitude informada. Como havia o risco de termos associado uma geometria a algum ponto de forma errônea,   utilizamos funções de manipulação de textos como a  *rm_acent* do pacote **abjutils** e outras funções como *str_replace* do pacote **stringr** para verificar se as geometrias obtidas correspondem aos territórios almejados.
    
 ## Dados do Brasil
 
@@ -86,6 +83,8 @@ output:
   Para obter os dados para os municípios de Minas Gerais, realizamos um filtro que selecionava as linhas onde o município era diferente de nulo e o estado era "MG".
   
   Um problema que percebemos ao logo da verificação dos resultados obtidos foi que as linhas referentes a Rondonia a nível de estado estavam repetidas, porém com todos os valores das colunas zerados. Dessa forma, foi necessário eliminar essas linhas para o nosso resultado final. 
+
+\newpage
 
 # Criação das visualizações
 
@@ -116,9 +115,17 @@ output:
   Feito isso, o próximo passo foi a construção do mapa utilizando as funcionalidades e estrutura do pacote **ggplot2**. Assim como no mapa do mundo, a função *geom_sf* foi utilizada. Ao fim desse processo, foi utilizada a função **ggplotly** do pacote **plotly** para tornar o gráfico interativo.
   
   
+
+\newpage
 # Criação do painel
 
+  O painel foi criado a partir do pacote **flexdashboard**. Ele permite a estruturação das visualizações em formato de dashboard de maneira bem simples, utilizando  o **RMarkdown**. Para incluir filtros dos dados, o pacote permite uma interação com o **shiny**.
 
+  Nesta etapa, criamos funções reativas dos dados para que as visualizações fossem sensíveis aos filtros. Além disso, usamos a função  *ggplotly* do pacote **plotly** para que os gráficos e mapas fossem interativos e ocupassem a área gráfica da melhor forma possíviel. 
+
+  Assim como em aplicativos shiny, textos, mapas e outros elementos reativos precisam ser renderizandos. Assim usamos as funções *renderValueBox* que renderiza os cartões (ou valueBox) e renderPlotly para os elementos do plotly. As funções do tipo *Input* do shiny, foram utilizadas para coleta dos parâmetros dos filtros ou seleção do tipo de informação para os mapas.
+
+  As animações são os únicos elementos que não rodam junto com o aplicatvo. Elas foram salvas em formato de gif e então são lidas pelo painel. Esse procedimento foi necessário, pois essas visualizações gastam um tempo razóavel para carregar, causando lentidão no app. 
 
 # Apêncice
 
