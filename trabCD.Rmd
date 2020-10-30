@@ -37,23 +37,25 @@ output:
 \newpage
 
 # Introdução
-  Atualmente, estamos vivendo um surto de uma doença infecciosa chamada Covid-19 que é causada pelo novo coronavírus (Sars-Cov-2). A doença foi identificada pela primeira vez em Wuhan, na província de Hubei, República Popular da China.
 
-  Em 11 de março de 2020, a Organização Mundial de Saúde (OMS) declarou que estávamos vivendo uma pandemia, devido à rápida disseminação geográfica que a doença apresentou.
+   Atualmente, estamos vivendo um surto de uma doença infecciosa chamada Covid-19 que é causada pelo novo coronavírus (Sars-Cov-2). A doença foi identificada pela primeira vez em Wuhan, na província de Hubei, República Popular da China.
 
-  Apesar do mundo inteiro viver sob estado de alerta por essa doença, os países a enfrentam com  diferentes intensidades. Muitas razões podem ser atribuídas para esse fato, por exemplo os recursos que o países detêm para investimento em infraestura para o combate à doença, posicionamento dos governantes no sentido de fornecer à população condições para se protegerem, até mesmo a  postura da população em relação ao cumprimento das medidas de segurança, entre outros.
+   Em 11 de março de 2020, a Organização Mundial de Saúde (OMS) declarou que estávamos vivendo uma pandemia, devido à rápida disseminação geográfica que a doença apresentou.
 
-  A partir deste trabalho iremos fornecer uma visão sobre o panorama da doença atualmente. O produto final será um painél desenvolvido em shiny que trará análises descritivas visuais e métricas de interesse sobre o momento atual da pandemia no mundo e no Brasil.
+   Apesar do mundo inteiro viver sob estado de alerta por essa doença, os países a enfrentam com  diferentes intensidades. Muitas razões podem ser atribuídas para esse fato, por exemplo os recursos que o países detêm para investimento em infraestura para o combate à doença, posicionamento dos governantes no sentido de fornecer à população condições para se protegerem, até mesmo a  postura da população em relação ao cumprimento das medidas de segurança, entre outros.
 
-  A fonte utilizada para a busca dos dados em nível mundial foi o repositório de dados sobre a Covid-19 administrado pela universidade Johns Hopkins (EUA), já para buscar dados em nível Brasil utilizamos o portal Coronavirus-Brasil gerenciado pelo Ministério da Saúde.
+   A partir deste trabalho iremos fornecer uma visão sobre o panorama da doença atualmente. O produto final será um painél desenvolvido em shiny que trará análises descritivas visuais e métricas de interesse sobre o momento atual da pandemia no mundo e no Brasil.
+
+   A fonte utilizada para a busca dos dados em nível mundial foi o repositório de dados sobre a Covid-19 administrado pela universidade Johns Hopkins (EUA), já para buscar dados em nível Brasil utilizamos o portal Coronavirus-Brasil gerenciado pelo Ministério da Saúde.
 
 \newpage
 
 # Manipulação dos dados
- Uma vez utilizadas fontes de dados diferentes, o processo de manipulação dos dados também ocorreu de maneira distinta nos dados referentes ao mundo e ao Brasil. Iremos detalhar a seguir cada um deles. Nesta etapa, as integrantes encarregadas deste tratamento foram Larissa Carolina e Letícia Canhestro nos dados do mundo e Ana Clara, Amanda Xavier e Natália Oliveira nos dados do Brasil.
+
+   Uma vez utilizadas fontes de dados diferentes, o processo de manipulação dos dados também ocorreu de maneira distinta nos dados referentes ao mundo e ao Brasil. Iremos detalhar a seguir cada um deles. Nesta etapa, as integrantes encarregadas deste tratamento foram Larissa Carolina e Letícia Canhestro nos dados do mundo e Ana Clara, Amanda Xavier e Natália Oliveira nos dados do Brasil.
  
 ## Dados do Mundo
-   Como dito anteriormente, a fonte de dados utilizada para essa etapa foi o repositório da Universidade Johns Hopkins (EUA). A estrutura dos dados seguia um formato não muito adequado para a análise, sendo nessário um tempo considerável de trabalho no tratamento dos mesmos.
+    Como dito anteriormente, a fonte de dados utilizada para essa etapa foi o repositório da Universidade Johns Hopkins (EUA). A estrutura dos dados seguia um formato não muito adequado para a análise, sendo nessário um tempo considerável de trabalho no tratamento dos mesmos.
    
    Primeiramente, os dados estavam divididos em três bases diferentes, uma para os registros de casos confirmados, outra para as mortes, por fim uma base dedicada a registros de número de recuperados. Além disso, os dados estavem dispostos de maneira que cada país + província formava uma única linha no banco e cada data era acrescentada em formato de coluna.
    
@@ -71,7 +73,7 @@ output:
    Um outra etapa para a conclusão desse processo de manipulação dos dados foi necessário para a construção dos visuais de mapa. Para essa etapa, como estamos interessados em visualizar de maneira espacial o comportamento das métricas de interesse, achamos mais adequado não agrupar os territórios afastado ao seu país "dono". A união entre a base de dados da pandemia com a base que contem a geometria dos países foi feita pela latitude e longitude. Utilizamos a função *st_nearest_feature* do pacote **sf**.Ela vefifica a geometria mais próxima do ponto dado pela latitude e longitude informada. Como havia o risco de termos associado uma geometria a algum ponto de forma errônea,   utilizamos funções de manipulação de textos como a  *rm_acent* do pacote **abjutils** e outras funções como *str_replace* do pacote **stringr** para verificar se as geometrias obtidas correspondem aos territórios almejados.
    
 ## Dados do Brasil
-Descrever o proceso de manipulação dos dados.
+Descrever o processo de manipulação dos dados.
 
 
 \newpage
