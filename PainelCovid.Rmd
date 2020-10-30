@@ -196,11 +196,11 @@ mundo_pais$NovosMortos<-dados3$X..i..
 #########################
 #  Carregando pacotes   #
 #########################
-library(dplyr)
-library(tidyr)
-library(tidyverse)
-library(data.table)
-library(lubridate)
+#library(dplyr)
+#library(tidyr)
+#library(tidyverse)
+#library(data.table)
+#library(lubridate)
 library(gganimate)
 library(rio)
 library(httr)
@@ -274,7 +274,7 @@ qnt_meses <- as.numeric(str_sub(as.period(periodo, "month"), start = 1, end=1))
 #### Dados Brasil: ####
 
 #E possivel perceber que os dados para o Brasil s?o todos com coduf = 76
-dados_brasil <- filter(dados, coduf==76)
+#dados_brasil <- filter(dados, coduf==76)
 
 #### Dados Estados ###
 
@@ -336,7 +336,7 @@ rm(dados)
 
 ```{r}
 inputPanel(
-  selectInput('tipo_plot',label=h4('Selecione uma informação para o mapa'), choices = list('Total de casos confirmados'=1,'Total de mortos'=2,'Total de recuperados'=3),selected = 1)
+  selectInput('tipo_plot',label=h4('Selecione uma informação para o mapa'), choices = list('Total de casos confirmados'=1,'Total de mortos'=2,'Total de recuperados'=3, 'Letalidade' =4),selected = 1)
   )
 
 inputPanel(
@@ -423,6 +423,16 @@ renderValueBox(valueBox(sum(dados_cartao()$CasosConfirmados)))
 renderValueBox(valueBox(sum(dados_cartao()$Mortes)))
 ```
 
+
+### Letalidade em %
+
+```{r}
+renderValueBox(valueBox(round(sum(dados_cartao()$Mortes)/
+                                sum(dados_cartao()$CasosConfirmados)*100,2)))
+
+```
+
+
 ### Total de recuperados
 
 ```{r}
@@ -488,6 +498,15 @@ renderPlotly({
         ggtitle(paste('Total de recuperados até o dia',input$data))
   
       plotly::ggplotly(conf1, tooltip = c("Recuperados",'Territorio'))
+    }else if (input$tipo_plot ==4){
+      Letalidade<- mapa_g()$Mortes/mapa_g()$Casos *100
+      conf1<-ggplot()+
+        geom_sf(data=world,fill='white')+
+        geom_sf(data=mapa_g(),aes(label=Territorio,geometry=geometry,fill=Letalidade))+
+        theme_classic()+
+        ggtitle(paste('Letalidade até o dia',input$data))
+  
+      plotly::ggplotly(conf1, tooltip = c("Letalidade",'Territorio'))
     }
 
 })
@@ -721,6 +740,30 @@ renderValueBox(valueBox(sum(dados_cartao_brasil()$casosAcumulado)))
 renderValueBox(valueBox(sum(dados_cartao_brasil()$obitosAcumulado)))
 ```
 
+### Letalidade em %
+
+```{r}
+renderValueBox(valueBox(round(sum(dados_cartao_brasil()$obitosAcumulado)/sum(dados_cartao_brasil()$casosAcumulado)*100,2)))
+```
+
+
+
+
+### Mortalidade por 100 mil hab.
+
+```{r}
+renderValueBox(valueBox(round(sum(dados_cartao_brasil()$obitosAcumulado)/sum(dados_cartao_brasil()$populacaoTCU2019)*100000,2)))
+```
+
+
+### Índice de Incidênciapor 100 mil hab.
+
+```{r}
+renderValueBox(valueBox(round(sum(dados_cartao_brasil()$casosAcumulado)/sum(dados_cartao_brasil()$populacaoTCU2019)*100000,2)))
+```
+
+
+
 
 ## Mapa
 
@@ -736,7 +779,7 @@ renderPlotly({
     theme_classic()+
     ggtitle(paste('Total de casos até o dia',input$data2))
     
-    plotly::ggplotly(conf1, tooltip = c("Casos",'Estado'))
+    plotly::ggplotly(conf1, tooltip = c("casosAcumulado",'estado'))
     
     }else if (input$tipo_plot2 == 2){
       conf1<-ggplot() + 
@@ -750,7 +793,7 @@ renderPlotly({
   )+
     ggtitle(paste('Total de mortes até o dia',input$data2))
       
-    plotly::ggplotly(conf1, tooltip = c("Mortes",'Estado'))
+    plotly::ggplotly(conf1, tooltip = c("obitosAcumulado",'estado'))
     }
 
 })
