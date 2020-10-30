@@ -1,8 +1,8 @@
 ---
 lang: pt-BR
 output:
-  word_document: default
   pdf_document: default
+  word_document: default
 ---
 
 \begin{titlepage}
@@ -114,8 +114,16 @@ output:
   
   Feito isso, o próximo passo foi a construção do mapa utilizando as funcionalidades e estrutura do pacote **ggplot2**. Assim como no mapa do mundo, a função *geom_sf* foi utilizada. Ao fim desse processo, foi utilizada a função **ggplotly** do pacote **plotly** para tornar o gráfico interativo.
   
+   Para a construção das nuvens de palavras utilizamos o pacote **wordcloud2**. O principio básico da construção foi o mesmo para os dados do mundo e do Brasil, descreveremos o processo executado.
+   
+   Os dados utilizados na nuvem foram extraídos do Twitter através do pacote **twitteR**. Para poder acessar as informações do twitter através de sua API, foi necessário criar um aplicativo para que se possa obter quatro dados para autenticação: Consumer Key, Consumer Secret, Access Token e Access Secret. A criação desse aplicativo é realizada no site https://developer.twitter.com/en/apps. Com os dados da autenticação em mãos, podemos registrá-los no R com a função *setup_twitter_oauth*.
+   
+  Para a consulta no Twitter foi utilizada a função *searchTwitter*, onde filtramos os 1000 tweets mais recentes que citaram a palavra 'covid19'. O diferencial entre a nuvem do mundo e do Brasil é que no primeiro caso adicionamos o filtro de tweets realizados em inglês e no segundo o filtro da língua portuguesa.
   
-
+  Para transformar os tweets em palavras separadas utilizamos a função *strsplit* do pacote **stringr**. Feito isso, realizamos alguns ajustes na lista de palavras para retirar pontuações, números e espaços, esses ajustes foram realizados através da função *tm_map* do pacote **tm**. Observamos que a lista de palavras obtida possuia uma grande quantidade de stop words, que são palavras que podem ser consideradas irrelevantes para os resultados como, por exemplo, os artigos. Novamente a função *tm_map* foi utilizada para retirar essas palavras do conjunto.
+  
+  O conjunto de palavras obtido após esses ajustes foi transformado em uma tabela de frequência e então representado visualmente na nuvem de palavras através da função *wordcloud2*.
+  
 \newpage
 # Criação do painel
 
